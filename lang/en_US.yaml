@@ -1,0 +1,12 @@
+accounts_admin_create_user: Create User
+accounts_admin_username: Username
+accounts_admin_email: Email
+accounts_admin_roles: Roles
+accounts_admin_state: State
+accounts_admin_accounts: Accounts
+accounts_admin_create_new_user: Create New User
+accounts_admin_password: Password
+accounts_admin_edit: Edit
+accounts_admin_new_password: New Password
+accounts_admin_delete: Delete
+accounts_admin_save: Save

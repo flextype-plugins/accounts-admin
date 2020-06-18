@@ -1,0 +1,90 @@
+{% extends "plugins/accounts-admin/templates/partials/base.html" %}
+
+{% block content %}
+    {% if (accounts_list | length > 0) %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>
+                        {{ tr('accounts_admin_username') }}
+                    </th>
+                    <th>
+                        {{ tr('accounts_admin_email') }}
+                    </th>
+                    <th>
+                        {{ tr('accounts_admin_roles') }}
+                    </th>
+                    <th>
+                        {{ tr('accounts_admin_state') }}
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts_list %}
+                    <tr>
+                        <td class="w-1 text-center">
+                            <i class="icon">{{ icon('fas fa-user') }}</i>
+                        </td>
+                        <td class="pl-0">
+                            <a href="{{ path_for('admin.accounts.edit') }}?id={{ account.username }}">{{ account.username }}</a>
+                        </td>
+                        <td>
+                            {{ account.email }}
+                        </td>
+                        <td>
+                            {{ account.roles }}
+                        </td>
+                        <td>
+                            {{ account.state }}
+                        </td>
+                        <td class="text-right">
+                            <button type="button" class="js-dropdown-btn" data-dropdown="dropdown-{{ id }}">
+                                <i class="icon">{{ icon('fas fa-ellipsis-h') }}</i>
+                            </button>
+                            <div id="dropdown-{{ id }}" class="dropdown">
+                                <a class="dropdown__item" href="{{ path_for('admin.accounts.edit') }}?id={{ account.username }}">
+                                    <i class="icon icon--white mr-3">{{ icon('fas fa-edit') }}</i>
+                                    {{ tr('accounts_admin_edit') }}</a>
+                                <div class="dropdown__divider"></div>
+                                <a class="dropdown__item" href="javascript:;" onclick="event.preventDefault(); deleteAccount('{{ id }}', {{ loop.index0 }});">
+                                    <i class="icon icon--white mr-3">{{ icon('fas fa-trash-alt') }}</i>
+                                    {{ tr('accounts_admin_delete') }}</a>
+                                <form id="delete-account-id-{{ id }}" action="{{ path_for('admin.accounts.deleteProcess') }}" method="POST" style="display: none;">
+                                    {{ csrf() }}
+                                    <input type="hidden" name="account-id" value="{{ id }}">
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="text-center flex justify-center items-center h-full">
+            <div>
+                <i class="icon icon--4xl">{{ icon('fas fa-users') }}</i>
+                <h3 class="text-2xl pt-4 pb-8">{{ tr('accounts_admin_you_have_no_acccounts') }}</h3>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+
+{% block tail %}
+    <script>
+        function deleteAccount(id, row_num) {
+            if (dropdown[row_num]) {
+                dropdown[row_num].hide();
+            }
+            Swal.fire(
+                {title: "{{ tr('accounts_admin_confirmation_required') }}", text: "{{ tr('accounts_admin_confirmation_required_for_account_delete') }}", showCancelButton: true, confirmButtonText: "{{ tr('admin_yes_iam_sure')|raw }}", cancelButtonText: "{{ tr('admin_cancel') }}", reverseButtons: true}
+            ).then((result) => {
+                if (result.value) {
+                    document.getElementById('delete-account-id-' + id).submit();
+                }
+            });
+        }
+    </script>
+{% endblock %}
