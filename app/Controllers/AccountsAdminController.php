@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Flextype;
 
-use Flextype\Component\Session\Session;
-use Flextype\Component\Filesystem\Filesystem;
 use Flextype\Component\Arr\Arr;
+use Flextype\Component\Filesystem\Filesystem;
+use Flextype\Component\Session\Session;
 use Ramsey\Uuid\Uuid;
+use const PASSWORD_BCRYPT;
+use function array_merge;
+use function bin2hex;
 use function date;
 use function Flextype\Component\I18n\__;
+use function password_hash;
+use function password_verify;
+use function random_bytes;
+use function strtr;
+use function time;
+use function trim;
 
 /**
  * @property twig $twig
@@ -26,7 +35,6 @@ class AccountsAdminController extends Container
         $accounts      = [];
 
         foreach ($accounts_list as $account) {
-
             if ($account['type'] !== 'dir' || ! Filesystem::has($account['path'] . '/' . 'profile.yaml')) {
                 continue;
             }
@@ -46,19 +54,15 @@ class AccountsAdminController extends Container
                 'accounts' => [
                     'link' => $this->router->pathFor('admin.accounts.index'),
                     'title' => __('accounts_admin_accounts'),
-                    'active' => true
+                    'active' => true,
                 ],
             ],
             'buttons' => [
                 'accounts_add' => [
                     'link' => $this->router->pathFor('admin.accounts.add'),
-                    'title' => __('accounts_admin_create_new_user')
-                ]
+                    'title' => __('accounts_admin_create_new_user'),
+                ],
             ],
-            'logged_in_username' => Session::get('account_username'),
-            'logged_in_roles' => Session::get('account_roles'),
-            'logged_in_uuid' => Session::get('account_uuid'),
-            'logged_in' => Session::get('account_is_user_logged_in'),
         ]);
     }
 
@@ -77,7 +81,7 @@ class AccountsAdminController extends Container
                     'accounts_add' => [
                         'link' => $this->router->pathFor('admin.accounts.add'),
                         'title' => __('accounts_admin_create_new_user'),
-                        'active' => true
+                        'active' => true,
                     ],
                 ],
             ]
@@ -92,7 +96,6 @@ class AccountsAdminController extends Container
         $username = $this->slugify->slugify($post_data['username']);
 
         if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
-
             // Generate UUID
             $uuid = Uuid::uuid4()->toString();
 
@@ -125,7 +128,6 @@ class AccountsAdminController extends Container
                     'yaml'
                 )
             )) {
-
                 return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
             }
 
@@ -160,14 +162,14 @@ class AccountsAdminController extends Container
                     'accounts_edit' => [
                         'link' => $this->router->pathFor('admin.accounts.edit') . '?id=' . $query['id'],
                         'title' => __('accounts_admin_edit'),
-                        'active' => true
+                        'active' => true,
                     ],
                 ],
                 'buttons' => [
                     'save_entry' => [
                         'type' => 'action',
                         'link' => 'javascript:;',
-                        'title' => __('accounts_admin_save')
+                        'title' => __('accounts_admin_save'),
                     ],
                 ],
             ]
@@ -222,12 +224,349 @@ class AccountsAdminController extends Container
 
     public function deleteProcess($request, $response)
     {
-        if ($this->fieldsets->delete($request->getParsedBody()['fieldset-id'])) {
-            $this->flash->addMessage('success', __('form_admin_message_fieldset_deleted'));
-        } else {
-            $this->flash->addMessage('error', __('form_admin_message_fieldset_was_not_deleted'));
+        $username = $request->getParsedBody()['account-id'];
+
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+            if (Filesystem::delete($_user_file)) {
+                $this->flash->addMessage('success', __('accounts_admin_message_account_deleted'));
+            }
+            $this->flash->addMessage('error', __('accounts_admin_message_account_was_not_deleted'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.fieldsets.index'));
+        return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+    }
+
+    /**
+     * Login page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function login(Request $request, Response $response, array $args) : Response
+    {
+        if ($this->isUserLoggedIn()) {
+            return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => Session::get('account_username')]));
+        }
+
+        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/login.html';
+        $plugin_template_path = 'plugins/accounts/templates/login.html';
+        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
+
+        return $this->twig->render($response, $template_path);
+    }
+
+    /**
+     * Login page proccess
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function loginProcess(Request $request, Response $response, array $args) : Response
+    {
+        // Get Data from POST
+        $post_data = $request->getParsedBody();
+
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $post_data['username'] . '/profile.yaml')) {
+            $user_file = $this->serializer->decode(Filesystem::read($_user_file), 'yaml', false);
+
+            if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
+                Session::set('account_username', $user_file['username']);
+                Session::set('account_roles', $user_file['roles']);
+                Session::set('account_uuid', $user_file['uuid']);
+                Session::set('account_is_user_logged_in', true);
+
+                return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => $user_file['username']]));
+            }
+
+            $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
+
+            return $response->withRedirect($this->router->pathFor('accounts.login'));
+        }
+
+        $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
+
+        return $response->withRedirect($this->router->pathFor('accounts.login'));
+    }
+
+    /**
+     * Registration page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function registration(Request $request, Response $response, array $args) : Response
+    {
+        if ($this->isUserLoggedIn()) {
+            return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => Session::get('account_username')]));
+        }
+
+        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/registration.html';
+        $plugin_template_path = 'plugins/accounts/templates/registration.html';
+        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
+
+        return $this->twig->render($response, $template_path);
+    }
+
+    /**
+     * Reset passoword page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function resetPassword(Request $request, Response $response, array $args) : Response
+    {
+        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/registration.html';
+        $plugin_template_path = 'plugins/accounts/templates/reset-password.html';
+        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
+
+        return $this->twig->render($response, $template_path);
+    }
+
+    /**
+     * New passoword process
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function newPasswordProcess(Request $request, Response $response, array $args) : Response
+    {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $args['username'] . '/profile.yaml')) {
+            $user_file_body = Filesystem::read($_user_file);
+            $user_file_data = $this->serializer->decode($user_file_body, 'yaml');
+
+            if (password_verify(trim($args['hash']), $user_file_data['hashed_password_reset'])) {
+                // Generate new passoword
+                $raw_password    = bin2hex(random_bytes(16));
+                $hashed_password = password_hash($raw_password, PASSWORD_BCRYPT);
+
+                $user_file_data['hashed_password'] = $hashed_password;
+
+                Arr::delete($user_file_data, 'hashed_password_reset');
+
+                if (Filesystem::write(
+                    PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                    $this->serializer->encode(
+                        $user_file_data,
+                        'yaml'
+                    )
+                )) {
+                    // Instantiation and passing `true` enables exceptions
+                    $mail = new PHPMailer(true);
+
+                    $theme_new_password_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/new-password.md';
+                    $plugin_new_password_email_path = 'plugins/accounts/emails/new-password.md';
+                    $email_template_path            = Filesystem::has(PATH['project'] . '/' . $theme_new_password_email_path) ? $theme_new_password_email_path : $plugin_new_password_email_path;
+
+                    $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+
+                    //Recipients
+                    $mail->setFrom($new_password_email['from'], 'Mailer');
+                    $mail->addAddress($user_file_data['email'], $username);
+
+                    if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
+                        $url = $this->registry->get('flextype.settings.url');
+                    } else {
+                        $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                    }
+
+                    $tags = [
+                        '[sitename]' => $this->registry->get('plugins.site.settings.title'),
+                        '[username]' => $username,
+                        '[password]' => $raw_password,
+                        '[url]' => $url,
+                    ];
+
+                    $subject = $this->parser->parse($new_password_email['subject'], 'shortcodes');
+                    $content = $this->parser->parse($this->parser->parse($new_password_email['content'], 'shortcodes'), 'markdown');
+
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = strtr($subject, $tags);
+                    $mail->Body    = strtr($content, $tags);
+
+                    // Send email
+                    $mail->send();
+
+                    return $response->withRedirect($this->router->pathFor('accounts.login'));
+                }
+
+                return $response->withRedirect($this->router->pathFor('accounts.login'));
+            }
+
+            return $response->withRedirect($this->router->pathFor('accounts.login'));
+        }
+
+        return $response->withRedirect($this->router->pathFor('accounts.login'));
+    }
+
+    /**
+     * Reset passoword process
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function resetPasswordProcess(Request $request, Response $response, array $args) : Response
+    {
+        // Get Data from POST
+        $post_data = $request->getParsedBody();
+
+        // Get username
+        $username = $post_data['username'];
+
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+            Arr::delete($post_data, 'csrf_name');
+            Arr::delete($post_data, 'csrf_value');
+            Arr::delete($post_data, 'form-save-action');
+            Arr::delete($post_data, 'username');
+
+            $post_data['hashed_password_reset'] = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+
+            $user_file_body = Filesystem::read($_user_file);
+            $user_file_data = $this->serializer->decode($user_file_body, 'yaml');
+
+            // Create account
+            if (Filesystem::write(
+                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                $this->serializer->encode(
+                    array_merge($user_file_data, $post_data),
+                    'yaml'
+                )
+            )) {
+                // Instantiation and passing `true` enables exceptions
+                $mail = new PHPMailer(true);
+
+                $theme_reset_password_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/reset-password.md';
+                $plugin_reset_password_email_path = 'plugins/accounts/templates/emails/reset-password.md';
+                $email_template_path              = Filesystem::has(PATH['project'] . '/' . $theme_new_password_email_path) ? $theme_reset_password_email_path : $plugin_reset_password_email_path;
+
+                $reset_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+
+                //Recipients
+                $mail->setFrom($reset_password_email['from'], 'Mailer');
+                $mail->addAddress($user_file_data['email'], $username);
+
+                if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
+                    $url = $this->registry->get('flextype.settings.url');
+                } else {
+                    $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                }
+
+                $tags = [
+                    '[sitename]' => $this->registry->get('plugins.site.settings.title'),
+                    '[username]' => $username,
+                    '[url]' => $url,
+                ];
+
+                $subject = $this->parser->parse($reset_password_email['subject'], 'shortcodes');
+                $content = $this->parser->parse($this->parser->parse($reset_password_email['content'], 'shortcodes'), 'markdown');
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = strtr($subject, $tags);
+                $mail->Body    = strtr($content, $tags);
+
+                // Send email
+                $mail->send();
+
+                return $response->withRedirect($this->router->pathFor('accounts.login'));
+            }
+
+            return $response->withRedirect($this->router->pathFor('accounts.registration'));
+        }
+
+        return $response->withRedirect($this->router->pathFor('accounts.registration'));
+    }
+
+    /**
+     * Registration page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function registrationProcess(Request $request, Response $response, array $args) : Response
+    {
+        // Get Data from POST
+        $post_data = $request->getParsedBody();
+
+        $username = $this->slugify->slugify($post_data['username']);
+
+        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+            // Generate UUID
+            $uuid = Uuid::uuid4()->toString();
+
+            // Get time
+            $time = date($this->registry->get('flextype.settings.date_format'), time());
+
+            // Get username
+            $username = $this->slugify->slugify($post_data['username']);
+
+            // Get hashed password
+            $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
+
+            $post_data['username']        = $username;
+            $post_data['registered_at']   = $time;
+            $post_data['uuid']            = $uuid;
+            $post_data['hashed_password'] = $hashed_password;
+            $post_data['roles']           = 'user';
+
+            Arr::delete($post_data, 'csrf_name');
+            Arr::delete($post_data, 'csrf_value');
+            Arr::delete($post_data, 'password');
+            Arr::delete($post_data, 'form-save-action');
+
+            // Create accounts directory and account
+            Filesystem::createDir(PATH['project'] . '/accounts/' . $this->slugify->slugify($post_data['username']));
+
+            // Create admin account
+            if (Filesystem::write(
+                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                $this->serializer->encode(
+                    $post_data,
+                    'yaml'
+                )
+            )) {
+                // Instantiation and passing `true` enables exceptions
+                $mail = new PHPMailer(true);
+
+                $theme_new_user_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/new-user.md';
+                $plugin_new_user_email_path = 'plugins/accounts/templates/emails/new-user.md';
+                $email_template_path        = Filesystem::has(PATH['project'] . '/' . $theme_new_user_email_path) ? $theme_new_user_email_path : $plugin_new_user_email_path;
+
+                $new_user_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+
+                //Recipients
+                $mail->setFrom($new_user_email['from'], 'Mailer');
+                $mail->addAddress($post_data['email'], $username);
+
+                $tags = [
+                    '[sitename]' => $this->registry->get('plugins.site.settings.title'),
+                    '[username]' => $this->getUserLoggedInUsername(),
+                ];
+
+                $subject = $this->parser->parse($new_user_email['subject'], 'shortcodes');
+                $content = $this->parser->parse($this->parser->parse($new_user_email['content'], 'shortcodes'), 'markdown');
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = strtr($subject, $tags);
+                $mail->Body    = strtr($content, $tags);
+
+                // Send email
+                $mail->send();
+
+                return $response->withRedirect($this->router->pathFor('accounts.login'));
+            }
+
+            return $response->withRedirect($this->router->pathFor('accounts.registration'));
+        }
+
+        return $response->withRedirect($this->router->pathFor('accounts.registration'));
     }
 }
