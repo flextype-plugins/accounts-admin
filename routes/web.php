@@ -14,4 +14,6 @@ $app->group('/' . $admin_route, function () use ($app) : void {
     $app->post('/accounts/edit', 'AccountsAdminController:editProcess')->setName('admin.accounts.editProcess');
     $app->post('/accounts/delete', 'AccountsAdminController:deleteProcess')->setName('admin.accounts.deleteProcess');
 
-})->add(new AdminPanelIsUserLoggedInMiddleware($flextype))->add('csrf');
+})->add(new AclAccountIsUserLoggedInMiddleware(['container' => $flextype, 'redirect' => 'admin.users.login']))
+  ->add(new AclAccountsIsUserLoggedInRolesOneOfMiddleware(['container' => $flextype, 'redirect' => 'admin.users.login', 'roles' => 'admin']))
+  ->add('csrf');
