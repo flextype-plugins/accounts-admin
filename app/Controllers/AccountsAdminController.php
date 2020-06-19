@@ -7,6 +7,8 @@ namespace Flextype;
 use Flextype\Component\Arr\Arr;
 use Flextype\Component\Filesystem\Filesystem;
 use Flextype\Component\Session\Session;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Ramsey\Uuid\Uuid;
 use const PASSWORD_BCRYPT;
 use function array_merge;
@@ -236,6 +238,7 @@ class AccountsAdminController extends Container
         return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
     }
 
+
     /**
      * Login page
      *
@@ -245,15 +248,11 @@ class AccountsAdminController extends Container
      */
     public function login(Request $request, Response $response, array $args) : Response
     {
-        if ($this->isUserLoggedIn()) {
-            return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => Session::get('account_username')]));
+        if ($this->acl->isUserLoggedIn()) {
+            return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
         }
 
-        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/login.html';
-        $plugin_template_path = 'plugins/accounts/templates/login.html';
-        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
-
-        return $this->twig->render($response, $template_path);
+        return $this->twig->render($response, 'plugins/accounts-admin/templates/login.html');
     }
 
     /**
@@ -282,12 +281,12 @@ class AccountsAdminController extends Container
 
             $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
 
-            return $response->withRedirect($this->router->pathFor('accounts.login'));
+            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
         }
 
         $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
 
-        return $response->withRedirect($this->router->pathFor('accounts.login'));
+        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
     }
 
     /**
@@ -299,15 +298,11 @@ class AccountsAdminController extends Container
      */
     public function registration(Request $request, Response $response, array $args) : Response
     {
-        if ($this->isUserLoggedIn()) {
-            return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => Session::get('account_username')]));
+        if ($this->acl->isUserLoggedIn()) {
+            return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
         }
 
-        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/registration.html';
-        $plugin_template_path = 'plugins/accounts/templates/registration.html';
-        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
-
-        return $this->twig->render($response, $template_path);
+        return $this->twig->render($response, 'plugins/accounts-admin/templates/registration.html');
     }
 
     /**
@@ -319,11 +314,7 @@ class AccountsAdminController extends Container
      */
     public function resetPassword(Request $request, Response $response, array $args) : Response
     {
-        $theme_template_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/templates/registration.html';
-        $plugin_template_path = 'plugins/accounts/templates/reset-password.html';
-        $template_path        = Filesystem::has(PATH['project'] . '/' . $theme_template_path) ? $theme_template_path : $plugin_template_path;
-
-        return $this->twig->render($response, $template_path);
+        return $this->twig->render($response, 'plugins/accounts-admin/templates/reset-password.html');
     }
 
     /**
@@ -358,11 +349,7 @@ class AccountsAdminController extends Container
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $theme_new_password_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/new-password.md';
-                    $plugin_new_password_email_path = 'plugins/accounts/emails/new-password.md';
-                    $email_template_path            = Filesystem::has(PATH['project'] . '/' . $theme_new_password_email_path) ? $theme_new_password_email_path : $plugin_new_password_email_path;
-
-                    $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+                    $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/emails/new-password.md'), 'frontmatter');
 
                     //Recipients
                     $mail->setFrom($new_password_email['from'], 'Mailer');
@@ -392,16 +379,16 @@ class AccountsAdminController extends Container
                     // Send email
                     $mail->send();
 
-                    return $response->withRedirect($this->router->pathFor('accounts.login'));
+                    return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
                 }
 
-                return $response->withRedirect($this->router->pathFor('accounts.login'));
+                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
 
-            return $response->withRedirect($this->router->pathFor('accounts.login'));
+            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
         }
 
-        return $response->withRedirect($this->router->pathFor('accounts.login'));
+        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
     }
 
     /**
@@ -441,11 +428,7 @@ class AccountsAdminController extends Container
                 // Instantiation and passing `true` enables exceptions
                 $mail = new PHPMailer(true);
 
-                $theme_reset_password_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/reset-password.md';
-                $plugin_reset_password_email_path = 'plugins/accounts/templates/emails/reset-password.md';
-                $email_template_path              = Filesystem::has(PATH['project'] . '/' . $theme_new_password_email_path) ? $theme_reset_password_email_path : $plugin_reset_password_email_path;
-
-                $reset_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+                $reset_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'), 'frontmatter');
 
                 //Recipients
                 $mail->setFrom($reset_password_email['from'], 'Mailer');
@@ -474,13 +457,13 @@ class AccountsAdminController extends Container
                 // Send email
                 $mail->send();
 
-                return $response->withRedirect($this->router->pathFor('accounts.login'));
+                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
 
-            return $response->withRedirect($this->router->pathFor('accounts.registration'));
+            return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
         }
 
-        return $response->withRedirect($this->router->pathFor('accounts.registration'));
+        return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
     }
 
     /**
@@ -535,11 +518,7 @@ class AccountsAdminController extends Container
                 // Instantiation and passing `true` enables exceptions
                 $mail = new PHPMailer(true);
 
-                $theme_new_user_email_path  = 'themes/' . $this->registry->get('plugins.site.settings.theme') . '/templates/accounts/emails/new-user.md';
-                $plugin_new_user_email_path = 'plugins/accounts/templates/emails/new-user.md';
-                $email_template_path        = Filesystem::has(PATH['project'] . '/' . $theme_new_user_email_path) ? $theme_new_user_email_path : $plugin_new_user_email_path;
-
-                $new_user_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . $email_template_path), 'frontmatter');
+                $new_user_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'), 'frontmatter');
 
                 //Recipients
                 $mail->setFrom($new_user_email['from'], 'Mailer');
@@ -547,7 +526,7 @@ class AccountsAdminController extends Container
 
                 $tags = [
                     '[sitename]' => $this->registry->get('plugins.site.settings.title'),
-                    '[username]' => $this->getUserLoggedInUsername(),
+                    '[username]' => $this->acl->getUserLoggedInUsername(),
                 ];
 
                 $subject = $this->parser->parse($new_user_email['subject'], 'shortcodes');
@@ -561,12 +540,25 @@ class AccountsAdminController extends Container
                 // Send email
                 $mail->send();
 
-                return $response->withRedirect($this->router->pathFor('accounts.login'));
+                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
 
-            return $response->withRedirect($this->router->pathFor('accounts.registration'));
+            return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
         }
 
-        return $response->withRedirect($this->router->pathFor('accounts.registration'));
+        return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
+    }
+
+    /**
+     * Logout page process
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     */
+    public function logoutProcess(Request $request, Response $response) : Response
+    {
+        Session::destroy();
+
+        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
     }
 }
