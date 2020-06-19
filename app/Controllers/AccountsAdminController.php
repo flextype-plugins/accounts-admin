@@ -9,6 +9,7 @@ use Flextype\Component\Filesystem\Filesystem;
 use Flextype\Component\Session\Session;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use PHPMailer\PHPMailer\PHPMailer;
 use Ramsey\Uuid\Uuid;
 use const PASSWORD_BCRYPT;
 use function array_merge;
@@ -287,6 +288,7 @@ class AccountsAdminController extends Container
         $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+
     }
 
     /**
@@ -389,6 +391,7 @@ class AccountsAdminController extends Container
         }
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+
     }
 
     /**
@@ -400,6 +403,7 @@ class AccountsAdminController extends Container
      */
     public function resetPasswordProcess(Request $request, Response $response, array $args) : Response
     {
+
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
@@ -497,7 +501,7 @@ class AccountsAdminController extends Container
             $post_data['registered_at']   = $time;
             $post_data['uuid']            = $uuid;
             $post_data['hashed_password'] = $hashed_password;
-            $post_data['roles']           = 'user';
+            $post_data['roles']           = 'admin';
 
             Arr::delete($post_data, 'csrf_name');
             Arr::delete($post_data, 'csrf_value');
@@ -539,6 +543,98 @@ class AccountsAdminController extends Container
 
                 // Send email
                 $mail->send();
+
+                // Update default entry
+                $this->entries->update('home', ['created_by' => $uuid, 'published_by' => $uuid, 'published_at' => $time, 'created_at' => $time]);
+
+                // Create default entries delivery token
+                $api_delivery_entries_token = bin2hex(random_bytes(16));
+                $api_delivery_entries_token_dir_path  = PATH['project'] . '/tokens' . '/delivery/entries/' . $api_delivery_entries_token;
+                $api_delivery_entries_token_file_path = $api_delivery_entries_token_dir_path . '/token.yaml';
+
+                if (! Filesystem::has($api_delivery_entries_token_dir_path)) Filesystem::createDir($api_delivery_entries_token_dir_path);
+
+                Filesystem::write(
+                    $api_delivery_entries_token_file_path,
+                    $this->serializer->encode([
+                        'title' => 'Default',
+                        'icon' => 'fas fa-database',
+                        'limit_calls' => (int) 0,
+                        'calls' => (int) 0,
+                        'state' => 'enabled',
+                        'uuid' => $uuid,
+                        'created_by' => $uuid,
+                        'created_at' => $time,
+                        'updated_by' => $uuid,
+                        'updated_at' => $time,
+                    ], 'yaml')
+                );
+
+                // Create default images token
+                $api_images_token = bin2hex(random_bytes(16));
+                $api_images_token_dir_path  = PATH['project'] . '/tokens' . '/images/' . $api_images_token;
+                $api_images_token_file_path = $api_images_token_dir_path . '/token.yaml';
+
+                if (! Filesystem::has($api_images_token_dir_path)) Filesystem::createDir($api_images_token_dir_path);
+
+                Filesystem::write(
+                    $api_images_token_file_path,
+                    $this->serializer->encode([
+                        'title' => 'Default',
+                        'icon' => 'far fa-images',
+                        'limit_calls' => (int) 0,
+                        'calls' => (int) 0,
+                        'state' => 'enabled',
+                        'uuid' => $uuid,
+                        'created_by' => $uuid,
+                        'created_at' => $time,
+                        'updated_by' => $uuid,
+                        'updated_at' => $time,
+                    ], 'yaml')
+                );
+
+                // Create default registry delivery token
+                $api_delivery_registry_token = bin2hex(random_bytes(16));
+                $api_delivery_registry_token_dir_path  = PATH['project'] . '/tokens' . '/delivery/registry/' . $api_delivery_registry_token;
+                $api_delivery_registry_token_file_path = $api_delivery_registry_token_dir_path . '/token.yaml';
+
+                if (! Filesystem::has($api_delivery_registry_token_dir_path)) Filesystem::createDir($api_delivery_registry_token_dir_path);
+
+                Filesystem::write(
+                    $api_delivery_registry_token_file_path,
+                    $this->serializer->encode([
+                        'title' => 'Default',
+                        'icon' => 'fas fa-archive',
+                        'limit_calls' => (int) 0,
+                        'calls' => (int) 0,
+                        'state' => 'enabled',
+                        'uuid' => $uuid,
+                        'created_by' => $uuid,
+                        'created_at' => $time,
+                        'updated_by' => $uuid,
+                        'updated_at' => $time,
+                    ], 'yaml')
+                );
+
+                // Set Default API's tokens
+                $custom_flextype_settings_file_path = PATH['project'] . '/config/' . '/settings.yaml';
+                $custom_flextype_settings_file_data = $this->serializer->decode(Filesystem::read($custom_flextype_settings_file_path), 'yaml');
+
+                $custom_flextype_settings_file_data['api']['images']['default_token']               = $api_images_token;
+                $custom_flextype_settings_file_data['api']['delivery']['entries']['default_token']  = $api_delivery_entries_token;
+                $custom_flextype_settings_file_data['api']['delivery']['registry']['default_token'] = $api_delivery_registry_token;
+
+                Filesystem::write($custom_flextype_settings_file_path, $this->serializer->encode($custom_flextype_settings_file_data, 'yaml'));
+
+                // Create uploads dir for default entries
+                if (! Filesystem::has(PATH['project'] . '/uploads/entries/home/')) {
+                    Filesystem::createDir(PATH['project'] . '/uploads/entries/home/');
+                }
+
+                // Set super admin regisered = true
+                $accounts_admin_config = $this->serializer->decode(Filesystem::read(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml'), 'yaml');
+                $accounts_admin_config['supper_admin_registered'] = true;
+                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', $this->serializer->encode($accounts_admin_config, 'yaml'));
 
                 return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
