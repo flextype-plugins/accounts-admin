@@ -1,6 +1,6 @@
 ---
-accounts_admin_create_user: Create User
-accounts_admin_username: Username
+accounts_admin_create_user: Créer un utilisateur
+accounts_admin_username: Nom d'utilisateur
 accounts_admin_email: Email
 accounts_admin_roles: Roles
 accounts_admin_state: State
