@@ -14,6 +14,7 @@ form:
       title: accounts_username
       type: text
       size: 12
+      help: admin_installation_username_tip
       validation:
         required: true
         pattern: '^[a-z0-9_-]{3,16}$'
@@ -21,6 +22,7 @@ form:
       title: accounts_password
       type: password
       size: 12
+      help: admin_installation_password_tip
       validation:
         required: true
         pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
@@ -28,5 +30,6 @@ form:
       title: accounts_email
       type: email
       size: 12
+      help: admin_installation_email_tip
       validation:
         required: false

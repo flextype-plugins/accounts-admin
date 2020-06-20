@@ -33,3 +33,8 @@ form:
       validation:
         required: false
         pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
+    state:
+      title: accounts_admin_state
+      type: select
+      options: { enabled: enabled, disabled: disabled }
+      size: 12

@@ -36,3 +36,8 @@ form:
       size: 12
       validation:
         required: false
+    state:
+      title: accounts_admin_state
+      type: select
+      options: { enabled: enabled, disabled: disabled }
+      size: 12
