@@ -6,3 +6,7 @@ priority: 50
 
 # Is super admin registered
 supper_admin_registered: false
+
+# From email
+from:
+  email: support@flextype.org

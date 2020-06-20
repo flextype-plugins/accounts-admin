@@ -32,7 +32,14 @@ use function trim;
  */
 class AccountsAdminController extends Container
 {
-    public function index($request, $response)
+    /**
+     * Index page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function index(Request $request, Response $response, array $args) : Response
     {
         $accounts_list = Filesystem::listContents(PATH['project'] . '/accounts');
         $accounts      = [];
@@ -69,7 +76,14 @@ class AccountsAdminController extends Container
         ]);
     }
 
-    public function add($request, $response)
+    /**
+     * Add page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function add(Request $request, Response $response, array $args) : Response
     {
         return $this->twig->render(
             $response,
@@ -91,14 +105,23 @@ class AccountsAdminController extends Container
         );
     }
 
-    public function addProcess($request, $response)
+    /**
+     * Add proccess page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function addProccess(Request $request, Response $response, array $args) : Response
     {
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
+        // Get username
         $username = $this->slugify->slugify($post_data['username']);
 
         if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+
             // Generate UUID
             $uuid = Uuid::uuid4()->toString();
 
@@ -120,10 +143,10 @@ class AccountsAdminController extends Container
             Arr::delete($post_data, 'password');
             Arr::delete($post_data, 'form-save-action');
 
-            // Create accounts directory and account
+            // Create directory for account
             Filesystem::createDir(PATH['project'] . '/accounts/' . $username);
 
-            // Create admin account
+            // Create account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $username . '/profile.yaml',
                 $this->serializer->encode(
@@ -140,12 +163,23 @@ class AccountsAdminController extends Container
         return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
     }
 
-    public function edit($request, $response)
+    /**
+     * Edit page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function edit(Request $request, Response $response, array $args) : Response
     {
         // Get Query Params
         $query = $request->getQueryParams();
 
-        $profile = $this->serializer->decode(Filesystem::read(PATH['project'] . '/accounts/' . $query['id'] . '/profile.yaml'), 'yaml');
+        // Get Profile ID
+        $id = $query['id'];
+
+        // Get Profile
+        $profile = $this->serializer->decode(Filesystem::read(PATH['project'] . '/accounts/' . $id . '/profile.yaml'), 'yaml');
 
         Arr::delete($profile, 'hashed_password');
         Arr::delete($profile, 'hashed_password_reset');
@@ -156,7 +190,7 @@ class AccountsAdminController extends Container
             [
                 'menu_item' => 'accounts',
                 'profile' => $profile,
-                'id' => $query['id'],
+                'id' => $id,
                 'links' =>  [
                     'accounts' => [
                         'link' => $this->router->pathFor('admin.accounts.index'),
@@ -179,7 +213,14 @@ class AccountsAdminController extends Container
         );
     }
 
-    public function editProcess($request, $response)
+    /**
+     * Edit proccess page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function editProccess(Request $request, Response $response, array $args) : Response
     {
         // Get Query Params
         $query = $request->getQueryParams();
@@ -225,10 +266,19 @@ class AccountsAdminController extends Container
         return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
     }
 
-    public function deleteProcess($request, $response)
+    /**
+     * Delete proccess page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function deleteProccess(Request $request, Response $response, array $args) : Response
     {
+        // Get username
         $username = $request->getParsedBody()['account-id'];
 
+        // Delete...
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
             if (Filesystem::delete($_user_file)) {
                 $this->flash->addMessage('success', __('accounts_admin_message_account_deleted'));
@@ -238,7 +288,6 @@ class AccountsAdminController extends Container
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
     }
-
 
     /**
      * Login page
@@ -268,7 +317,10 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $post_data['username'] . '/profile.yaml')) {
+        // Get username
+        $username = $post_data['username'];
+
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
             $user_file = $this->serializer->decode(Filesystem::read($_user_file), 'yaml', false);
 
             if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
@@ -277,15 +329,15 @@ class AccountsAdminController extends Container
                 Session::set('account_uuid', $user_file['uuid']);
                 Session::set('account_is_user_logged_in', true);
 
-                return $response->withRedirect($this->router->pathFor('accounts.profile', ['username' => $user_file['username']]));
+                return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
             }
 
-            $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
+            $this->flash->addMessage('error', __('accounts_admin_message_wrong_username_password'));
 
             return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
         }
 
-        $this->flash->addMessage('error', __('admin_message_wrong_username_password'));
+        $this->flash->addMessage('error', __('accounts_admin_message_wrong_username_password'));
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
 
@@ -328,11 +380,15 @@ class AccountsAdminController extends Container
      */
     public function newPasswordProcess(Request $request, Response $response, array $args) : Response
     {
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $args['username'] . '/profile.yaml')) {
+        // Get username
+        $username = $args['username'];
+
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
             $user_file_body = Filesystem::read($_user_file);
             $user_file_data = $this->serializer->decode($user_file_body, 'yaml');
 
             if (password_verify(trim($args['hash']), $user_file_data['hashed_password_reset'])) {
+
                 // Generate new passoword
                 $raw_password    = bin2hex(random_bytes(16));
                 $hashed_password = password_hash($raw_password, PASSWORD_BCRYPT);
@@ -354,7 +410,7 @@ class AccountsAdminController extends Container
                     $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/emails/new-password.md'), 'frontmatter');
 
                     //Recipients
-                    $mail->setFrom($new_password_email['from'], 'Mailer');
+                    $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
                     $mail->addAddress($user_file_data['email'], $username);
 
                     if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
@@ -364,10 +420,10 @@ class AccountsAdminController extends Container
                     }
 
                     $tags = [
-                        '[sitename]' => $this->registry->get('plugins.site.settings.title'),
-                        '[username]' => $username,
-                        '[password]' => $raw_password,
-                        '[url]' => $url,
+                        '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                        '{username}' => $username,
+                        '{password}' => $raw_password,
+                        '{url}' => $url,
                     ];
 
                     $subject = $this->parser->parse($new_password_email['subject'], 'shortcodes');
@@ -435,7 +491,7 @@ class AccountsAdminController extends Container
                 $reset_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'), 'frontmatter');
 
                 //Recipients
-                $mail->setFrom($reset_password_email['from'], 'Mailer');
+                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
                 $mail->addAddress($user_file_data['email'], $username);
 
                 if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
@@ -445,9 +501,9 @@ class AccountsAdminController extends Container
                 }
 
                 $tags = [
-                    '[sitename]' => $this->registry->get('plugins.site.settings.title'),
-                    '[username]' => $username,
-                    '[url]' => $url,
+                    '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                    '{username}' => $username,
+                    '{url}' => $url,
                 ];
 
                 $subject = $this->parser->parse($reset_password_email['subject'], 'shortcodes');
@@ -482,6 +538,7 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
+        // Get username
         $username = $this->slugify->slugify($post_data['username']);
 
         if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
@@ -525,12 +582,12 @@ class AccountsAdminController extends Container
                 $new_user_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'), 'frontmatter');
 
                 //Recipients
-                $mail->setFrom($new_user_email['from'], 'Mailer');
+                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
                 $mail->addAddress($post_data['email'], $username);
 
                 $tags = [
-                    '[sitename]' => $this->registry->get('plugins.site.settings.title'),
-                    '[username]' => $this->acl->getUserLoggedInUsername(),
+                    '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                    '{username}' => $username,
                 ];
 
                 $subject = $this->parser->parse($new_user_email['subject'], 'shortcodes');

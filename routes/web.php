@@ -25,3 +25,9 @@ $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) 
 })->add(new AclAccountIsUserLoggedInMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login']))
   ->add(new AclAccountsIsUserLoggedInRolesOneOfMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login', 'roles' => 'admin']))
   ->add('csrf');
+
+$app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) : void {
+    $app->get('/no-access', function($request, $response, $args) {
+        return $response->write("You have no access to this page.");
+    })->setName('admin.accounts.no-access');
+});
