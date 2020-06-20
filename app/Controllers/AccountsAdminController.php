@@ -112,7 +112,7 @@ class AccountsAdminController extends Container
      * @param Response $response PSR7 response
      * @param array    $args     Args
      */
-    public function addProccess(Request $request, Response $response, array $args) : Response
+    public function addProcess(Request $request, Response $response, array $args) : Response
     {
         // Get Data from POST
         $post_data = $request->getParsedBody();
@@ -136,7 +136,7 @@ class AccountsAdminController extends Container
             $post_data['uuid']            = $uuid;
             $post_data['hashed_password'] = $hashed_password;
             $post_data['roles']           = $post_data['roles'];
-            $post_data['state']           = 'enabled';
+            $post_data['state']           = $post_data['state'];
 
             Arr::delete($post_data, 'csrf_name');
             Arr::delete($post_data, 'csrf_value');
@@ -202,13 +202,6 @@ class AccountsAdminController extends Container
                         'active' => true,
                     ],
                 ],
-                'buttons' => [
-                    'save_entry' => [
-                        'type' => 'action',
-                        'link' => 'javascript:;',
-                        'title' => __('accounts_admin_save'),
-                    ],
-                ],
             ]
         );
     }
@@ -220,7 +213,7 @@ class AccountsAdminController extends Container
      * @param Response $response PSR7 response
      * @param array    $args     Args
      */
-    public function editProccess(Request $request, Response $response, array $args) : Response
+    public function editProcess(Request $request, Response $response, array $args) : Response
     {
         // Get Query Params
         $query = $request->getQueryParams();
@@ -273,7 +266,7 @@ class AccountsAdminController extends Container
      * @param Response $response PSR7 response
      * @param array    $args     Args
      */
-    public function deleteProccess(Request $request, Response $response, array $args) : Response
+    public function deleteProcess(Request $request, Response $response, array $args) : Response
     {
         // Get username
         $username = $request->getParsedBody()['account-id'];
