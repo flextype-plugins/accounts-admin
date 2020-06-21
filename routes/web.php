@@ -23,8 +23,11 @@ $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) 
     $app->post('/delete', 'AccountsAdminController:deleteProcess')->setName('admin.accounts.deleteProcess');
     $app->post('/logout', 'AccountsAdminController:logoutProcess')->setName('admin.accounts.logoutProcess');
 })->add(new AclAccountIsUserLoggedInMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login']))
-  ->add(new AclAccountsIsUserLoggedInRolesOneOfMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login', 'roles' => 'admin']))
+  ->add(new AclAccountsIsUserLoggedInRolesOneOfMiddleware(['container' => $flextype,
+                                                           'redirect' => ($flextype->acl->isUserLoggedIn() ? 'admin.accounts.no-access' : 'admin.accounts.login'),
+                                                           'roles' => 'admin']))
   ->add('csrf');
+
 
 $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) : void {
     $app->get('/no-access', function($request, $response, $args) {
