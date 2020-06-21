@@ -1,5 +1,5 @@
 {% extends "plugins/accounts-admin/templates/partials/base.html" %}
 
 {% block content %}
-    {{ form.render(serializer_decode(filesystem_read(PATH_PROJECT ~ '/fieldsets/accounts-admin/edit.yaml'), 'yaml'), profile)|raw }}
+    {{ form.render(serializer_decode(filesystem_read(PATH_PROJECT ~ '/fieldsets/accounts-admin-edit.yaml'), 'yaml'), profile)|raw }}
 {% endblock %}
