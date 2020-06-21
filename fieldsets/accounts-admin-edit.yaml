@@ -1,0 +1,42 @@
+title: 'Edit Account'
+default_field: title
+icon: fas fa-user
+size: 4/12
+hide: true
+form:
+  name: create-new-account
+  buttons:
+    submit:
+      type: submit
+      title: accounts_admin_save
+  fields:
+    full_name:
+      title: accounts_full_name
+      type: text
+      size: 12
+    email:
+      title: accounts_admin_email
+      type: email
+      size: 12
+      validation:
+        required: false
+    roles:
+      title: accounts_admin_roles
+      type: tags
+      size: 12
+      validation:
+        required: false
+    new_password:
+      title: accounts_admin_new_password
+      type: password
+      size: 12
+      validation:
+        required: false
+        pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
+    state:
+      title: accounts_admin_state
+      type: select
+      options:
+        enabled: enabled
+        disabled: disabled
+      size: 12
