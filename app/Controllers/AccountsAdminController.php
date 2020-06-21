@@ -11,6 +11,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PHPMailer\PHPMailer\PHPMailer;
 use Ramsey\Uuid\Uuid;
+use Slim\Http\Environment;
+use Slim\Http\Uri;
 use const PASSWORD_BCRYPT;
 use function array_merge;
 use function bin2hex;
@@ -322,6 +324,9 @@ class AccountsAdminController extends Container
                 Session::set('account_uuid', $user_file['uuid']);
                 Session::set('account_is_user_logged_in', true);
 
+                // Run event onAccountsAdminUserLoggedIn
+                $this->emitter->emit('onAccountsAdminUserLoggedIn');
+
                 return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
             }
 
@@ -400,10 +405,10 @@ class AccountsAdminController extends Container
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/emails/new-password.md'), 'frontmatter');
+                    $new_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'), 'frontmatter');
 
                     //Recipients
-                    $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
+                    $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
                     $mail->addAddress($user_file_data['email'], $username);
 
                     if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
@@ -413,7 +418,7 @@ class AccountsAdminController extends Container
                     }
 
                     $tags = [
-                        '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                        '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
                         '{username}' => $username,
                         '{password}' => $raw_password,
                         '{url}' => $url,
@@ -429,6 +434,11 @@ class AccountsAdminController extends Container
 
                     // Send email
                     $mail->send();
+
+                    $this->flash->addMessage('success', __('accounts_admin_message_new_password_was_sended'));
+
+                    // Run event onAccountsAdminNewPasswordReset
+                    $this->emitter->emit('onAccountsAdminNewPasswordReset');
 
                     return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
                 }
@@ -465,7 +475,8 @@ class AccountsAdminController extends Container
             Arr::delete($post_data, 'form-save-action');
             Arr::delete($post_data, 'username');
 
-            $post_data['hashed_password_reset'] = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+            $raw_hash                           = bin2hex(random_bytes(16));
+            $post_data['hashed_password_reset'] = password_hash($raw_hash, PASSWORD_BCRYPT);
 
             $user_file_body = Filesystem::read($_user_file);
             $user_file_data = $this->serializer->decode($user_file_body, 'yaml');
@@ -484,7 +495,7 @@ class AccountsAdminController extends Container
                 $reset_password_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'), 'frontmatter');
 
                 //Recipients
-                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
+                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
                 $mail->addAddress($user_file_data['email'], $username);
 
                 if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
@@ -494,9 +505,10 @@ class AccountsAdminController extends Container
                 }
 
                 $tags = [
-                    '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                    '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
                     '{username}' => $username,
                     '{url}' => $url,
+                    '{new_hash}' => $raw_hash,
                 ];
 
                 $subject = $this->parser->parse($reset_password_email['subject'], 'shortcodes');
@@ -509,6 +521,9 @@ class AccountsAdminController extends Container
 
                 // Send email
                 $mail->send();
+
+                // Run event onAccountsAdminNewPasswordReset
+                $this->emitter->emit('onAccountsAdminNewPasswordReset');
 
                 return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
@@ -552,6 +567,7 @@ class AccountsAdminController extends Container
             $post_data['uuid']            = $uuid;
             $post_data['hashed_password'] = $hashed_password;
             $post_data['roles']           = 'admin';
+            $post_data['state']           = 'enabled';
 
             Arr::delete($post_data, 'csrf_name');
             Arr::delete($post_data, 'csrf_value');
@@ -575,11 +591,11 @@ class AccountsAdminController extends Container
                 $new_user_email = $this->serializer->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'), 'frontmatter');
 
                 //Recipients
-                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('flextype.settings.title'));
+                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
                 $mail->addAddress($post_data['email'], $username);
 
                 $tags = [
-                    '{sitename}' => $this->registry->get('plugins.site.settings.title'),
+                    '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
                     '{username}' => $username,
                 ];
 
@@ -704,6 +720,9 @@ class AccountsAdminController extends Container
     public function logoutProcess(Request $request, Response $response) : Response
     {
         Session::destroy();
+
+        // Run event onAccountsAdminLogout
+        $this->emitter->emit('onAccountsAdminLogout');
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
     }

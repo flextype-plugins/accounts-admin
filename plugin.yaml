@@ -15,5 +15,6 @@ dependencies:
   twig: '>=1.0.0'
   admin: '>=1.0.0'
   form: '>=1.0.0'
+  form-admin: '>=1.0.0'
   jquery: '>=1.0.0'
   acl: '>=1.0.0'
