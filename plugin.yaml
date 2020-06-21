@@ -1,0 +1,20 @@
+name: Accounts Admin
+version: 1.0.0
+description: Accounts Admin Plugin to manage users accounts in Flextype Admin Panel.
+icon: fas fa-users
+author:
+  name: Sergey Romanenko
+  email: support@flextype.org
+  url: https://flextype.org
+homepage: https://github.com/flextype-plugins/accounts-admin
+bugs: https://github.com/flextype-plugins/accounts-admin/issues
+license: MIT
+
+dependencies:
+  flextype: 0.9.8
+  twig: '>=1.0.0'
+  admin: '>=1.0.0'
+  form: '>=1.0.0'
+  form-admin: '>=1.0.0'
+  jquery: '>=1.0.0'
+  acl: '>=1.0.0'

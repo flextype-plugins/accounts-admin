@@ -1,0 +1,13 @@
+# enabled: true or false to disable the plugin
+enabled: true
+
+# Accounts Admin plugin priority
+priority: 50
+
+# Is super admin registered
+supper_admin_registered: false
+
+# From email
+from:
+  name: Flextype
+  email: support@flextype.org

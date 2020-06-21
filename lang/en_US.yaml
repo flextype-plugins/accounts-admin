@@ -1,0 +1,17 @@
+accounts_admin_create_user: Create User
+accounts_admin_username: Username
+accounts_admin_email: Email
+accounts_admin_roles: Roles
+accounts_admin_state: State
+accounts_admin_accounts: Accounts
+accounts_admin_create_new_user: Create New User
+accounts_admin_password: Password
+accounts_admin_edit: Edit
+accounts_admin_new_password: New Password
+accounts_admin_delete: Delete
+accounts_admin_save: Save
+accounts_admin_message_account_was_not_deleted: "Account was deleted."
+accounts_admin_message_account_deleted: "Account was not deleted."
+accounts_admin_confirmation_required_for_account_delete: "Are you sure you want to delete this account?"
+accounts_admin_confirmation_required: "Confirmation Required"
+accounts_admin_message_wrong_username_password: "Wrong username or password"
