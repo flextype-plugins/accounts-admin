@@ -16,3 +16,12 @@ accounts_admin_message_account_deleted: "Аккаунт не был удален
 accounts_admin_confirmation_required_for_account_delete: "Вы уверены, что хотите удалить этот аккаунт?"
 accounts_admin_confirmation_required: "Требуется подтверждение"
 accounts_admin_message_wrong_username_password: "Неверное имя пользователя или пароль"
+accounts_admin_installation_username_tip: "Lowercase chars only, e.g. admin"
+accounts_admin_installation_email_tip: "Valid email address"
+accounts_admin_installation_password_tip: "The password must have at least 8 characters, contain uppercase letters, lowercase letters, special characters and numbers."
+accounts_admin_message_new_password_was_sended: "New password was sended"
+accounts_admin_login: Login
+accounts_admin_forgot_password: Forgot Password ?
+accounts_admin_reset_password: Reset Password
+accounts_admin_reset: Reset
+accounts_admin_cancel: Cancel
