@@ -4,23 +4,26 @@ icon: fas fa-user
 size: 4/12
 hide: true
 form:
-  messages:
-      success: false
-      error: false
   buttons:
     submit:
       type: submit
-      title: accounts_login
+      title: accounts_admin_login
     forgot_password:
       type: link
-      title: accounts_forgot_password
+      title: accounts_admin_forgot_password
       href: ./reset-password
   fields:
     username:
-      title: accounts_username
+      title: accounts_admin_username
       type: text
       size: 12
+      validation:
+        required: true
+        pattern: '^[a-z0-9_-]{3,16}$'
     password:
-      title: accounts_password
+      title: accounts_admin_password
       type: password
       size: 12
+      validation:
+        required: true
+        pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
