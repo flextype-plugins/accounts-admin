@@ -21,9 +21,9 @@ accounts_admin_installation_email_tip: "Действительный адрес 
 accounts_admin_installation_password_tip: "Пароль должен содержать как минимум 8 символов, содержать заглавные буквы, строчные буквы, специальные символы и цифры."
 accounts_admin_message_new_password_was_sended: "Новый пароль был отправлен"
 accounts_admin_login: Войти
-accounts_admin_registration: Registration
+accounts_admin_registration: Регистрация
 accounts_admin_forgot_password: Забыли пароль?
 accounts_admin_reset_password: Сбросить пароль
 accounts_admin_reset: Сброс
 accounts_admin_cancel: Отмена
-accounts_admin_full_name: Full name
+accounts_admin_full_name: Полное имя
