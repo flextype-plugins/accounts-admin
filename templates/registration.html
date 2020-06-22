@@ -2,7 +2,7 @@
 
 {% block content %}
     <div style="display: flex; align-items: center; justify-content: center;">
-        <h3>{{ __('accounts_registration') }}</h3>
+        <h3>{{ __('accounts_admin_registration') }}</h3>
     </div>
     <div style="display: flex; align-items: center; justify-content: center;">
         {{ form.render(serializer_decode(filesystem_read(PATH_PROJECT ~ '/fieldsets/accounts-admin-registration.yaml'), 'yaml'), {})|raw }}
