@@ -1,5 +1,5 @@
 name: Accounts Admin
-version: 1.0.1
+version: 1.0.2
 description: Accounts Admin Plugin to manage users accounts in Flextype Admin Panel.
 icon: fas fa-users
 author:
@@ -18,3 +18,4 @@ dependencies:
   form-admin: '>=1.0.0'
   jquery: '>=1.0.0'
   acl: '>=1.0.0'
+  phpmailer: '>=1.0.0'
