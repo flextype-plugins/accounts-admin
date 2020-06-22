@@ -11,7 +11,7 @@ form:
       title: accounts_admin_save
   fields:
     full_name:
-      title: accounts_full_name
+      title: accounts_admin_full_name
       type: text
       size: 12
     email:
