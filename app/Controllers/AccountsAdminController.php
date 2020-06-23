@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+/**
+ * @link https://flextype.org
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Flextype;
 
 use Flextype\Component\Arr\Arr;
@@ -29,7 +36,6 @@ use function trim;
  * @property twig $twig
  * @property Fieldsets $fieldsets
  * @property Router $router
- * @property Slugify $slugify
  * @property Flash $flash
  */
 class AccountsAdminController extends Container
@@ -51,12 +57,16 @@ class AccountsAdminController extends Container
                 continue;
             }
 
-            $account = $this->serializer->decode(Filesystem::read($account['path'] . '/profile.yaml'), 'yaml');
+            $account_to_store = $this->serializer->decode(Filesystem::read($account['path'] . '/profile.yaml'), 'yaml');
+
+            $_path = explode('/', $account['path']);
+            $account_to_store['email'] = array_pop($_path);
 
             Arr::delete($account, 'hashed_password');
             Arr::delete($account, 'hashed_password_reset');
 
-            $accounts[] = $account;
+
+            $accounts[] = $account_to_store;
         }
 
         return $this->twig->render($response, 'plugins/accounts-admin/templates/index.html', [
@@ -119,10 +129,10 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        // Get username
-        $username = $this->slugify->slugify($post_data['username']);
+        // Get user email
+        $email = $post_data['email'];
 
-        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
 
             // Generate UUID
             $uuid = Uuid::uuid4()->toString();
@@ -133,7 +143,7 @@ class AccountsAdminController extends Container
             // Get hashed password
             $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
 
-            $post_data['username']        = $username;
+            $post_data['email']           = $email;
             $post_data['registered_at']   = $time;
             $post_data['uuid']            = $uuid;
             $post_data['hashed_password'] = $hashed_password;
@@ -146,11 +156,11 @@ class AccountsAdminController extends Container
             Arr::delete($post_data, 'form-save-action');
 
             // Create directory for account
-            Filesystem::createDir(PATH['project'] . '/accounts/' . $username);
+            Filesystem::createDir(PATH['project'] . '/accounts/' . $email);
 
             // Create account
             if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
                 $this->serializer->encode(
                     $post_data,
                     'yaml'
@@ -178,10 +188,10 @@ class AccountsAdminController extends Container
         $query = $request->getQueryParams();
 
         // Get Profile ID
-        $id = $query['id'];
+        $email = $query['email'];
 
         // Get Profile
-        $profile = $this->serializer->decode(Filesystem::read(PATH['project'] . '/accounts/' . $id . '/profile.yaml'), 'yaml');
+        $profile = $this->serializer->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'), 'yaml');
 
         Arr::delete($profile, 'hashed_password');
         Arr::delete($profile, 'hashed_password_reset');
@@ -192,14 +202,14 @@ class AccountsAdminController extends Container
             [
                 'menu_item' => 'accounts',
                 'profile' => $profile,
-                'id' => $id,
+                'email' => $email,
                 'links' =>  [
                     'accounts' => [
                         'link' => $this->router->pathFor('admin.accounts.index'),
                         'title' => __('accounts_admin_accounts'),
                     ],
                     'accounts_edit' => [
-                        'link' => $this->router->pathFor('admin.accounts.edit') . '?id=' . $query['id'],
+                        'link' => $this->router->pathFor('admin.accounts.edit') . '?email=' . $query['email'],
                         'title' => __('accounts_admin_edit'),
                         'active' => true,
                     ],
@@ -223,15 +233,15 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        // Get username
-        $username = $query['id'];
+        // Get email
+        $email = $query['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             Arr::delete($post_data, 'csrf_name');
             Arr::delete($post_data, 'csrf_value');
             Arr::delete($post_data, 'form-save-action');
             Arr::delete($post_data, 'password');
-            Arr::delete($post_data, 'username');
+            Arr::delete($post_data, 'email');
 
             if (! empty($post_data['new_password'])) {
                 $post_data['hashed_password'] = password_hash($post_data['new_password'], PASSWORD_BCRYPT);
@@ -246,7 +256,7 @@ class AccountsAdminController extends Container
 
             // Create admin account
             if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
                 $this->serializer->encode(
                     array_merge($user_file_data, $post_data),
                     'yaml'
@@ -270,11 +280,11 @@ class AccountsAdminController extends Container
      */
     public function deleteProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get username
-        $username = $request->getParsedBody()['account-id'];
+        // Get email
+        $email = $request->getParsedBody()['account-email'];
 
         // Delete...
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             if (Filesystem::delete($_user_file)) {
                 $this->flash->addMessage('success', __('accounts_admin_message_account_deleted'));
             }
@@ -312,17 +322,18 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        // Get username
-        $username = $post_data['username'];
+        // Get email
+        $email = $post_data['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             $user_file = $this->serializer->decode(Filesystem::read($_user_file), 'yaml', false);
 
             if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
-                Session::set('account_username', $user_file['username']);
-                Session::set('account_roles', $user_file['roles']);
-                Session::set('account_uuid', $user_file['uuid']);
-                Session::set('account_is_user_logged_in', true);
+
+                $this->acl->setUserLoggedInEmail($email);
+                $this->acl->setUserLoggedInRoles($user_file['roles']);
+                $this->acl->setUserLoggedInUuid($user_file['uuid']);
+                $this->acl->setUserLoggedIn(true);
 
                 // Run event onAccountsAdminUserLoggedIn
                 $this->emitter->emit('onAccountsAdminUserLoggedIn');
@@ -330,12 +341,12 @@ class AccountsAdminController extends Container
                 return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
             }
 
-            $this->flash->addMessage('error', __('accounts_admin_message_wrong_username_password'));
+            $this->flash->addMessage('error', __('accounts_admin_message_wrong_email_password'));
 
             return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
         }
 
-        $this->flash->addMessage('error', __('accounts_admin_message_wrong_username_password'));
+        $this->flash->addMessage('error', __('accounts_admin_message_wrong_email_password'));
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
 
@@ -378,10 +389,10 @@ class AccountsAdminController extends Container
      */
     public function newPasswordProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get username
-        $username = $args['username'];
+        // Get email
+        $email = $args['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             $user_file_body = Filesystem::read($_user_file);
             $user_file_data = $this->serializer->decode($user_file_body, 'yaml');
 
@@ -396,7 +407,7 @@ class AccountsAdminController extends Container
                 Arr::delete($user_file_data, 'hashed_password_reset');
 
                 if (Filesystem::write(
-                    PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                    PATH['project'] . '/accounts/' . $email . '/profile.yaml',
                     $this->serializer->encode(
                         $user_file_data,
                         'yaml'
@@ -409,7 +420,7 @@ class AccountsAdminController extends Container
 
                     //Recipients
                     $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                    $mail->addAddress($user_file_data['email'], $username);
+                    $mail->addAddress($user_file_data['email'], $email);
 
                     if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
                         $url = $this->registry->get('flextype.settings.url');
@@ -417,9 +428,16 @@ class AccountsAdminController extends Container
                         $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
                     }
 
+                    if (isset($user_file_data['full_name'])) {
+                        $user = $user_file_data['full_name'];
+                    } else {
+                        $user = $email;
+                    }
+
                     $tags = [
                         '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                        '{username}' => $username,
+                        '{email}' => $email,
+                        '{user}' => $user,
                         '{password}' => $raw_password,
                         '{url}' => $url,
                     ];
@@ -462,18 +480,17 @@ class AccountsAdminController extends Container
      */
     public function resetPasswordProcess(Request $request, Response $response, array $args) : Response
     {
-
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        // Get username
-        $username = $post_data['username'];
+        // Get email
+        $email = $post_data['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             Arr::delete($post_data, 'csrf_name');
             Arr::delete($post_data, 'csrf_value');
             Arr::delete($post_data, 'form-save-action');
-            Arr::delete($post_data, 'username');
+            Arr::delete($post_data, 'email');
 
             $raw_hash                           = bin2hex(random_bytes(16));
             $post_data['hashed_password_reset'] = password_hash($raw_hash, PASSWORD_BCRYPT);
@@ -483,7 +500,7 @@ class AccountsAdminController extends Container
 
             // Create account
             if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
                 $this->serializer->encode(
                     array_merge($user_file_data, $post_data),
                     'yaml'
@@ -496,7 +513,7 @@ class AccountsAdminController extends Container
 
                 //Recipients
                 $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                $mail->addAddress($user_file_data['email'], $username);
+                $mail->addAddress($user_file_data['email'], $email);
 
                 if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
                     $url = $this->registry->get('flextype.settings.url');
@@ -504,9 +521,16 @@ class AccountsAdminController extends Container
                     $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
                 }
 
+                if (isset($user_file_data['full_name'])) {
+                    $user = $user_file_data['full_name'];
+                } else {
+                    $user = $email;
+                }
+
                 $tags = [
                     '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                    '{username}' => $username,
+                    '{email}' => $email,
+                    '{user}' => $user,
                     '{url}' => $url,
                     '{new_hash}' => $raw_hash,
                 ];
@@ -546,23 +570,20 @@ class AccountsAdminController extends Container
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
-        // Get username
-        $username = $this->slugify->slugify($post_data['username']);
+        // Get email
+        $email = $post_data['email'];
 
-        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $username . '/profile.yaml')) {
+        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             // Generate UUID
             $uuid = Uuid::uuid4()->toString();
 
             // Get time
             $time = date($this->registry->get('flextype.settings.date_format'), time());
 
-            // Get username
-            $username = $this->slugify->slugify($post_data['username']);
-
             // Get hashed password
             $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
 
-            $post_data['username']        = $username;
+            $post_data['email']           = $email;
             $post_data['registered_at']   = $time;
             $post_data['uuid']            = $uuid;
             $post_data['hashed_password'] = $hashed_password;
@@ -575,11 +596,11 @@ class AccountsAdminController extends Container
             Arr::delete($post_data, 'form-save-action');
 
             // Create accounts directory and account
-            Filesystem::createDir(PATH['project'] . '/accounts/' . $this->slugify->slugify($post_data['username']));
+            Filesystem::createDir(PATH['project'] . '/accounts/' . $post_data['email']);
 
             // Create admin account
             if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $username . '/profile.yaml',
+                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
                 $this->serializer->encode(
                     $post_data,
                     'yaml'
@@ -592,11 +613,17 @@ class AccountsAdminController extends Container
 
                 //Recipients
                 $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                $mail->addAddress($post_data['email'], $username);
+                $mail->addAddress($email, $email);
+
+                if (isset($post_data['full_name'])) {
+                    $user = $post_data['full_name'];
+                } else {
+                    $user = $email;
+                }
 
                 $tags = [
-                    '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                    '{username}' => $username,
+                    '{sitename}' =>  $this->registry->get('plugins.accounts-admin.settings.from.name'),
+                    '{user}'    => $user,
                 ];
 
                 $subject = $this->parser->parse($new_user_email['subject'], 'shortcodes');
