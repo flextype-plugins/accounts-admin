@@ -7,9 +7,6 @@
                 <tr>
                     <th></th>
                     <th>
-                        {{ tr('accounts_admin_username') }}
-                    </th>
-                    <th>
                         {{ tr('accounts_admin_email') }}
                     </th>
                     <th>
@@ -28,10 +25,7 @@
                             <i class="icon">{{ icon('fas fa-user') }}</i>
                         </td>
                         <td class="pl-0">
-                            <a href="{{ path_for('admin.accounts.edit') }}?id={{ account.username }}">{{ account.username }}</a>
-                        </td>
-                        <td>
-                            {{ account.email }}
+                            <a href="{{ path_for('admin.accounts.edit') }}?email={{ account.email }}">{{ account.email }}</a>
                         </td>
                         <td>
                             {{ account.roles }}
@@ -40,20 +34,20 @@
                             {{ account.state }}
                         </td>
                         <td class="text-right">
-                            <button type="button" class="js-dropdown-btn" data-dropdown="dropdown-{{ account.username }}">
+                            <button type="button" class="js-dropdown-btn" data-dropdown="dropdown-{{ account.email }}">
                                 <i class="icon">{{ icon('fas fa-ellipsis-h') }}</i>
                             </button>
-                            <div id="dropdown-{{ account.username }}" class="dropdown">
-                                <a class="dropdown__item" href="{{ path_for('admin.accounts.edit') }}?id={{ account.username }}">
+                            <div id="dropdown-{{ account.email }}" class="dropdown">
+                                <a class="dropdown__item" href="{{ path_for('admin.accounts.edit') }}?email={{ account.email }}">
                                     <i class="icon icon--white mr-3">{{ icon('fas fa-edit') }}</i>
                                     {{ tr('accounts_admin_edit') }}</a>
                                 <div class="dropdown__divider"></div>
-                                <a class="dropdown__item" href="javascript:;" onclick="event.preventDefault(); deleteAccount('{{ account.username }}', {{ loop.index0 }});">
+                                <a class="dropdown__item" href="javascript:;" onclick="event.preventDefault(); deleteAccount('{{ account.email }}', {{ loop.index0 }});">
                                     <i class="icon icon--white mr-3">{{ icon('fas fa-trash-alt') }}</i>
                                     {{ tr('accounts_admin_delete') }}</a>
-                                <form id="delete-account-id-{{ account.username }}" action="{{ path_for('admin.accounts.deleteProcess') }}" method="POST" style="display: none;">
+                                <form id="delete-account-email-{{ account.email }}" action="{{ path_for('admin.accounts.deleteProcess') }}" method="POST" style="display: none;">
                                     {{ csrf() }}
-                                    <input type="hidden" name="account-id" value="{{ account.username }}">
+                                    <input type="hidden" name="account-email" value="{{ account.email }}">
                                 </form>
                             </div>
                         </td>
@@ -74,7 +68,7 @@
 
 {% block tail %}
     <script>
-        function deleteAccount(id, row_num) {
+        function deleteAccount(email, row_num) {
             if (dropdown[row_num]) {
                 dropdown[row_num].hide();
             }
@@ -82,7 +76,7 @@
                 {title: "{{ tr('accounts_admin_confirmation_required') }}", text: "{{ tr('accounts_admin_confirmation_required_for_account_delete') }}", showCancelButton: true, confirmButtonText: "{{ tr('admin_yes_iam_sure')|raw }}", cancelButtonText: "{{ tr('admin_cancel') }}", reverseButtons: true}
             ).then((result) => {
                 if (result.value) {
-                    document.getElementById('delete-account-id-' + id).submit();
+                    document.getElementById('delete-account-email-' + email).submit();
                 }
             });
         }

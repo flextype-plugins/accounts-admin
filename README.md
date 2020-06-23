@@ -19,6 +19,7 @@ The following dependencies need to be installed for Accounts Admin Plugin.
 | [admin](https://github.com/flextype-plugins/admin) | >=1.0.0 | [download](https://github.com/flextype-plugins/admin/releases) |
 | [jquery](https://github.com/flextype-plugins/jquery) | >=1.0.0 | [download](https://github.com/flextype-plugins/jquery/releases) |
 | [acl](https://github.com/flextype-plugins/acl) | >=1.0.0 | [download](https://github.com/flextype-plugins/acl/releases) |
+| [phpmailer](https://github.com/flextype-plugins/phpmailer) | >=1.0.0 | [download](https://github.com/flextype-plugins/phpmailer/releases) |
 
 ## INSTALLATION
 
