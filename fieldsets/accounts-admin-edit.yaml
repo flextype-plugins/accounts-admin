@@ -4,7 +4,10 @@ icon: fas fa-user
 size: 4/12
 hide: true
 form:
-  name: create-new-account
+  name: edit-account
+  messages:
+    success: false
+    error: false
   buttons:
     submit:
       type: submit

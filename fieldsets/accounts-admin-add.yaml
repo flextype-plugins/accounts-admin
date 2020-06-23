@@ -5,6 +5,9 @@ size: 4/12
 hide: true
 form:
   name: create-new-account
+  messages:
+    success: false
+    error: false
   buttons:
     submit:
       type: submit
