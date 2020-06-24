@@ -39,8 +39,14 @@ class AccountsIsSupperAdminRegisteredMiddleware extends Container
      */
     public function __invoke(Request $request, Response $response, callable $next) : Response
     {
-        // Get admin config
-        $accounts_admin_config = $this->serializer->decode(Filesystem::read(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml'), 'yaml');
+        // Get admin config file
+        if (Filesystem::has(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml')) {
+            $acconts_admin_config_path = PATH['project'] . '/config/plugins/accounts-admin/settings.yaml';
+        } else {
+            $acconts_admin_config_path = PATH['project'] . '/plugins/accounts-admin/settings.yaml';
+        }
+
+        $accounts_admin_config = $this->serializer->decode(Filesystem::read($acconts_admin_config_path), 'yaml');
 
         if ($accounts_admin_config['supper_admin_registered'] === false) {
             $response = $next($request, $response);
