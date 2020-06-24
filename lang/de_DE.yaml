@@ -15,7 +15,6 @@ accounts_admin_message_account_was_not_deleted: "Konto wurde gelöscht."
 accounts_admin_message_account_deleted: "Konto wurde nicht gelöscht."
 accounts_admin_confirmation_required_for_account_delete: "Sind Sie sicher, dass Sie dieses Konto löschen möchten?"
 accounts_admin_confirmation_required: "Bestätigung erforderlich"
-accounts_admin_message_wrong_username_password: "Wrong username or password"
 accounts_admin_installation_username_tip: "Lowercase chars only, e.g. admin"
 accounts_admin_installation_email_tip: "Valid email address"
 accounts_admin_installation_password_tip: "The password must have at least 8 characters, contain uppercase letters, lowercase letters, special characters and numbers."
@@ -28,3 +27,4 @@ accounts_admin_reset: Reset
 accounts_admin_cancel: Cancel
 accounts_admin_full_name: Full name
 accounts_admin_message_hashed_password_reset_not_valid: "Hash for password reset is not valid"
+accounts_admin_message_wrong_email_password: "The email and password you entered did not match our records."
