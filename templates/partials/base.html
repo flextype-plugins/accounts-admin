@@ -1,8 +1,8 @@
 {% extends "plugins/admin/templates/partials/base.html" %}
 
 {% block admin_navigation_top_secondary %}
-    {% if is_current_path('admin.accounts.index')or
-    is_current_path('admin.accounts.edit')or
+    {% if is_current_path('admin.accounts.index') or
+    is_current_path('admin.accounts.edit') or
     is_current_path('admin.accounts.add') %}
         /
         <span class="pr-1 pl-1">{{ id }}</span>

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flextype;
+use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInMiddleware;
+use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
+use Flextype\Plugin\AccountsAdmin\Middlewares\AccountsIsSupperAdminRegisteredMiddleware;
 
 $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) {
     $app->get('/login', 'AccountsAdminController:login')->setName('admin.accounts.login');

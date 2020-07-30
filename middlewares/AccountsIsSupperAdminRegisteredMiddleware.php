@@ -7,11 +7,12 @@ declare(strict_types=1);
  * Founded by Sergey Romanenko and maintained by Flextype Community.
  */
 
-namespace Flextype;
+namespace Flextype\Plugin\AccountsAdmin\Middlewares;
 
 use Flextype\Component\Filesystem\Filesystem;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Flextype\App\Foundation\Container;
 
 class AccountsIsSupperAdminRegisteredMiddleware extends Container
 {
@@ -46,7 +47,7 @@ class AccountsIsSupperAdminRegisteredMiddleware extends Container
             $acconts_admin_config_path = PATH['project'] . '/plugins/accounts-admin/settings.yaml';
         }
 
-        $accounts_admin_config = $this->serializer->decode(Filesystem::read($acconts_admin_config_path), 'yaml');
+        $accounts_admin_config = $this->yaml->decode(Filesystem::read($acconts_admin_config_path));
 
         if ($accounts_admin_config['supper_admin_registered'] === false) {
             $response = $next($request, $response);
