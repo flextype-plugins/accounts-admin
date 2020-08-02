@@ -364,6 +364,10 @@ class AccountsAdminController extends Container
             return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
         }
 
+        if ($this->isSuperAdminExists()) {
+            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        }
+
         return $this->twig->render($response, 'plugins/accounts-admin/templates/registration.html');
     }
 
@@ -412,9 +416,7 @@ class AccountsAdminController extends Container
 
                 if (Filesystem::write(
                     PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                    $this->yaml->encode(
-                        $user_file_data
-                    )
+                    $this->yaml->encode($user_file_data)
                 )) {
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
@@ -571,6 +573,10 @@ class AccountsAdminController extends Container
      */
     public function registrationProcess(Request $request, Response $response, array $args) : Response
     {
+        if ($this->isSuperAdminExists()) {
+            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        }
+
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
@@ -758,5 +764,10 @@ class AccountsAdminController extends Container
         $this->emitter->emit('onAccountsAdminLogout');
 
         return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+    }
+
+    protected function isSuperAdminExists()
+    {
+        return $this->registry->get('plugins.accounts-admin.settings.supper_admin_registered');
     }
 }
