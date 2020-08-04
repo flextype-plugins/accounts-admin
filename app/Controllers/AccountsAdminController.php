@@ -306,6 +306,11 @@ class AccountsAdminController extends Container
             return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
         }
 
+        if (!$this->isSuperAdminExists()) {
+            return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
+        }
+
+
         return $this->twig->render($response, 'plugins/accounts-admin/templates/login.html');
     }
 
@@ -577,6 +582,9 @@ class AccountsAdminController extends Container
             return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
         }
 
+        // Clear cache before proccess
+        $this->cache->clearAll();
+
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
@@ -651,7 +659,7 @@ class AccountsAdminController extends Container
 
                 // Create default entries delivery token
                 $api_delivery_entries_token = bin2hex(random_bytes(16));
-                $api_delivery_entries_token_dir_path  = PATH['project'] . '/tokens' . '/delivery/entries/' . $api_delivery_entries_token;
+                $api_delivery_entries_token_dir_path  = PATH['project'] . '/tokens/entries/' . $api_delivery_entries_token;
                 $api_delivery_entries_token_file_path = $api_delivery_entries_token_dir_path . '/token.yaml';
 
                 if (! Filesystem::has($api_delivery_entries_token_dir_path)) Filesystem::createDir($api_delivery_entries_token_dir_path);
@@ -674,7 +682,7 @@ class AccountsAdminController extends Container
 
                 // Create default images token
                 $api_images_token = bin2hex(random_bytes(16));
-                $api_images_token_dir_path  = PATH['project'] . '/tokens' . '/images/' . $api_images_token;
+                $api_images_token_dir_path  = PATH['project'] . '/tokens/images/' . $api_images_token;
                 $api_images_token_file_path = $api_images_token_dir_path . '/token.yaml';
 
                 if (! Filesystem::has($api_images_token_dir_path)) Filesystem::createDir($api_images_token_dir_path);
@@ -697,7 +705,7 @@ class AccountsAdminController extends Container
 
                 // Create default registry delivery token
                 $api_delivery_registry_token = bin2hex(random_bytes(16));
-                $api_delivery_registry_token_dir_path  = PATH['project'] . '/tokens' . '/delivery/registry/' . $api_delivery_registry_token;
+                $api_delivery_registry_token_dir_path  = PATH['project'] . '/tokens/registry/' . $api_delivery_registry_token;
                 $api_delivery_registry_token_file_path = $api_delivery_registry_token_dir_path . '/token.yaml';
 
                 if (! Filesystem::has($api_delivery_registry_token_dir_path)) Filesystem::createDir($api_delivery_registry_token_dir_path);
@@ -719,12 +727,12 @@ class AccountsAdminController extends Container
                 );
 
                 // Set Default API's tokens
-                $custom_flextype_settings_file_path = PATH['project'] . '/config/flextype/' . '/settings.yaml';
+                $custom_flextype_settings_file_path = PATH['project'] . '/config/flextype/settings.yaml';
                 $custom_flextype_settings_file_data = $this->yaml->decode(Filesystem::read($custom_flextype_settings_file_path));
 
-                $custom_flextype_settings_file_data['api']['images']['default_token']               = $api_images_token;
-                $custom_flextype_settings_file_data['api']['delivery']['entries']['default_token']  = $api_delivery_entries_token;
-                $custom_flextype_settings_file_data['api']['delivery']['registry']['default_token'] = $api_delivery_registry_token;
+                $custom_flextype_settings_file_data['api']['images']['default_token']   = $api_images_token;
+                $custom_flextype_settings_file_data['api']['entries']['default_token']  = $api_delivery_entries_token;
+                $custom_flextype_settings_file_data['api']['registry']['default_token'] = $api_delivery_registry_token;
 
                 Filesystem::write($custom_flextype_settings_file_path, $this->yaml->encode($custom_flextype_settings_file_data));
 
@@ -734,11 +742,11 @@ class AccountsAdminController extends Container
                 }
 
                 // Set super admin regisered = true
-                $accounts_admin_config = $this->yaml->decode(Filesystem::read(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml'));
+                $accounts_admin_config = $this->yaml->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
                 $accounts_admin_config['supper_admin_registered'] = true;
                 Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', $this->yaml->encode($accounts_admin_config));
 
-                // Clear cache
+                // Clear cache after proccess
                 $this->cache->clearAll();
 
                 return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
