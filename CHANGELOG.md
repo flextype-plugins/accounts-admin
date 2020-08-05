@@ -1,3 +1,14 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/flextype-plugins/accounts-admin) (2020-08-05)
+
+### Features
+
+* **core** update code base for new Flextype 0.9.9
+
+### Bug Fixes
+
+* **core** fix cache issue on registration
+
 <a name="1.1.2"></a>
 # [1.1.2](https://github.com/flextype-plugins/accounts-admin) (2020-06-24)
 

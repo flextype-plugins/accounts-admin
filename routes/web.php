@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Flextype;
+use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInMiddleware;
+use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
 
 $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) {
     $app->get('/login', 'AccountsAdminController:login')->setName('admin.accounts.login');
@@ -10,8 +11,8 @@ $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) 
     $app->get('/reset-password', 'AccountsAdminController:resetPassword')->setName('admin.accounts.resetPassword');
     $app->post('/reset-password', 'AccountsAdminController:resetPasswordProcess')->setName('admin.accounts.resetPasswordProcess');
     $app->get('/new-password/{email}/{hash}', 'AccountsAdminController:newPasswordProcess')->setName('admin.accounts.newPasswordProcess');
-    $app->get('/registration', 'AccountsAdminController:registration')->setName('admin.accounts.registration')->add(new AccountsIsSupperAdminRegisteredMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login']));
-    $app->post('/registration', 'AccountsAdminController:registrationProcess')->setName('admin.accounts.registrationProcess')->add(new AccountsIsSupperAdminRegisteredMiddleware(['container' => $flextype, 'redirect' => 'admin.accounts.login']));
+    $app->get('/registration', 'AccountsAdminController:registration')->setName('admin.accounts.registration');
+    $app->post('/registration', 'AccountsAdminController:registrationProcess')->setName('admin.accounts.registrationProcess');
 })->add('csrf');
 
 $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) {
@@ -27,10 +28,3 @@ $app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) 
                                                 'redirect' => ($flextype->acl->isUserLoggedIn() ? 'admin.accounts.no-access' : 'admin.accounts.login'),
                                                 'roles' => 'admin']))
   ->add('csrf');
-
-
-$app->group('/' . $admin_route . '/accounts', function () use ($app, $flextype) : void {
-    $app->get('/no-access', function($request, $response, $args) {
-        return $response->write("You have no access to this page.");
-    })->setName('admin.accounts.no-access');
-});

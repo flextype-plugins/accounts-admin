@@ -9,8 +9,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Flextype;
+namespace Flextype\Plugin\AccountsAdmin;
 
+use Flextype\Plugin\AccountsAdmin\Controllers\AccountsAdminController;
 use Slim\Flash\Messages;
 use Flextype\Component\I18n\I18n;
 use function Flextype\Component\I18n\__;
