@@ -583,7 +583,7 @@ class AccountsAdminController extends Container
         }
 
         // Clear cache before proccess
-        $this->cache->clearAll();
+        $this->cache->purgeAll();
 
         // Get Data from POST
         $post_data = $request->getParsedBody();
@@ -747,7 +747,7 @@ class AccountsAdminController extends Container
                 Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', $this->yaml->encode($accounts_admin_config));
 
                 // Clear cache after proccess
-                $this->cache->clearAll();
+                $this->cache->purgeAll();
 
                 return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
             }
