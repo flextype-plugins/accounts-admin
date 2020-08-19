@@ -31,7 +31,6 @@ use function random_bytes;
 use function strtr;
 use function time;
 use function trim;
-use Flextype\App\Foundation\Container;
 
 /**
  * @property twig $twig
@@ -39,8 +38,21 @@ use Flextype\App\Foundation\Container;
  * @property Router $router
  * @property Flash $flash
  */
-class AccountsAdminController extends Container
+class AccountsAdminController
 {
+    /**
+     * Flextype Application
+     */
+     protected $flextype;
+
+    /**
+     * __construct
+     */
+     public function __construct($flextype)
+     {
+         $this->flextype  = $flextype;
+     }
+
     /**
      * Index page
      *
@@ -58,7 +70,7 @@ class AccountsAdminController extends Container
                 continue;
             }
 
-            $account_to_store = $this->yaml->decode(Filesystem::read($account['path'] . '/profile.yaml'));
+            $account_to_store = $this->flextype->container('yaml')->decode(Filesystem::read($account['path'] . '/profile.yaml'));
 
             $_path = explode('/', $account['path']);
             $account_to_store['email'] = array_pop($_path);
@@ -70,19 +82,19 @@ class AccountsAdminController extends Container
             $accounts[] = $account_to_store;
         }
 
-        return $this->twig->render($response, 'plugins/accounts-admin/templates/index.html', [
+        return $this->flextype->container('twig')->render($response, 'plugins/accounts-admin/templates/index.html', [
             'accounts_list' => $accounts,
             'menu_item' => 'accounts-admin',
             'links' =>  [
                 'accounts' => [
-                    'link' => $this->router->pathFor('admin.accounts.index'),
+                    'link' => $this->flextype->container('router')->pathFor('admin.accounts.index'),
                     'title' => __('accounts_admin_accounts'),
                     'active' => true,
                 ],
             ],
             'buttons' => [
                 'accounts_add' => [
-                    'link' => $this->router->pathFor('admin.accounts.add'),
+                    'link' => $this->flextype->container('router')->pathFor('admin.accounts.add'),
                     'title' => __('accounts_admin_create_new_user'),
                 ],
             ],
@@ -98,18 +110,18 @@ class AccountsAdminController extends Container
      */
     public function add(Request $request, Response $response, array $args) : Response
     {
-        return $this->twig->render(
+        return $this->flextype->container('twig')->render(
             $response,
             'plugins/accounts-admin/templates/add.html',
             [
                 'menu_item' => 'accounts-admin',
                 'links' =>  [
                     'accounts' => [
-                        'link' => $this->router->pathFor('admin.accounts.index'),
+                        'link' => $this->flextype->container('router')->pathFor('admin.accounts.index'),
                         'title' => __('accounts_admin_accounts'),
                     ],
                     'accounts_add' => [
-                        'link' => $this->router->pathFor('admin.accounts.add'),
+                        'link' => $this->flextype->container('router')->pathFor('admin.accounts.add'),
                         'title' => __('accounts_admin_create_new_user'),
                         'active' => true,
                     ],
@@ -139,7 +151,7 @@ class AccountsAdminController extends Container
             $uuid = Uuid::uuid4()->toString();
 
             // Get time
-            $time = date($this->registry->get('flextype.settings.date_format'), time());
+            $time = date($this->flextype->container('registry')->get('flextype.settings.date_format'), time());
 
             // Get hashed password
             $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
@@ -162,17 +174,17 @@ class AccountsAdminController extends Container
             // Create account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                $this->yaml->encode(
+                $this->flextype->container('yaml')->encode(
                     $post_data
                 )
             )) {
-                return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
             }
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
     }
 
     /**
@@ -191,12 +203,12 @@ class AccountsAdminController extends Container
         $email = $query['email'];
 
         // Get Profile
-        $profile = $this->yaml->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'));
+        $profile = $this->flextype->container('yaml')->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'));
 
         Arrays::delete($profile, 'hashed_password');
         Arrays::delete($profile, 'hashed_password_reset');
 
-        return $this->twig->render(
+        return $this->flextype->container('twig')->render(
             $response,
             'plugins/accounts-admin/templates/edit.html',
             [
@@ -205,11 +217,11 @@ class AccountsAdminController extends Container
                 'email' => $email,
                 'links' =>  [
                     'accounts' => [
-                        'link' => $this->router->pathFor('admin.accounts.index'),
+                        'link' => $this->flextype->container('router')->pathFor('admin.accounts.index'),
                         'title' => __('accounts_admin_accounts'),
                     ],
                     'accounts_edit' => [
-                        'link' => $this->router->pathFor('admin.accounts.edit') . '?email=' . $query['email'],
+                        'link' => $this->flextype->container('router')->pathFor('admin.accounts.edit') . '?email=' . $query['email'],
                         'title' => __('accounts_admin_edit'),
                         'active' => true,
                     ],
@@ -252,22 +264,22 @@ class AccountsAdminController extends Container
             }
 
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = $this->yaml->decode($user_file_body);
+            $user_file_data = $this->flextype->container('yaml')->decode($user_file_body);
 
             // Create admin account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                $this->yaml->encode(
+                $this->flextype->container('yaml')->encode(
                     array_merge($user_file_data, $post_data)
                 )
             )) {
-                return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
             }
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
     }
 
     /**
@@ -285,12 +297,12 @@ class AccountsAdminController extends Container
         // Delete...
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             if (Filesystem::delete($_user_file)) {
-                $this->flash->addMessage('success', __('accounts_admin_message_account_deleted'));
+                $this->flextype->container('flash')->addMessage('success', __('accounts_admin_message_account_deleted'));
             }
-            $this->flash->addMessage('error', __('accounts_admin_message_account_was_not_deleted'));
+            $this->flextype->container('flash')->addMessage('error', __('accounts_admin_message_account_was_not_deleted'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.index'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.index'));
     }
 
     /**
@@ -302,16 +314,16 @@ class AccountsAdminController extends Container
      */
     public function login(Request $request, Response $response, array $args) : Response
     {
-        if ($this->acl->isUserLoggedIn()) {
-            return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
+        if ($this->flextype->container('acl')->isUserLoggedIn()) {
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.dashboard.index'));
         }
 
         if (!$this->isSuperAdminExists()) {
-            return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.registration'));
         }
 
 
-        return $this->twig->render($response, 'plugins/accounts-admin/templates/login.html');
+        return $this->flextype->container('twig')->render($response, 'plugins/accounts-admin/templates/login.html');
     }
 
     /**
@@ -330,29 +342,29 @@ class AccountsAdminController extends Container
         $email = $post_data['email'];
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            $user_file = $this->yaml->decode(Filesystem::read($_user_file), false);
+            $user_file = $this->flextype->container('yaml')->decode(Filesystem::read($_user_file), false);
 
             if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
 
-                $this->acl->setUserLoggedInEmail($email);
-                $this->acl->setUserLoggedInRoles($user_file['roles']);
-                $this->acl->setUserLoggedInUuid($user_file['uuid']);
-                $this->acl->setUserLoggedIn(true);
+                $this->flextype->container('acl')->setUserLoggedInEmail($email);
+                $this->flextype->container('acl')->setUserLoggedInRoles($user_file['roles']);
+                $this->flextype->container('acl')->setUserLoggedInUuid($user_file['uuid']);
+                $this->flextype->container('acl')->setUserLoggedIn(true);
 
                 // Run event onAccountsAdminUserLoggedIn
-                $this->emitter->emit('onAccountsAdminUserLoggedIn');
+                $this->flextype->container('emitter')->emit('onAccountsAdminUserLoggedIn');
 
-                return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.dashboard.index'));
             }
 
-            $this->flash->addMessage('error', __('accounts_admin_message_wrong_email_password'));
+            $this->flextype->container('flash')->addMessage('error', __('accounts_admin_message_wrong_email_password'));
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
         }
 
-        $this->flash->addMessage('error', __('accounts_admin_message_wrong_email_password'));
+        $this->flextype->container('flash')->addMessage('error', __('accounts_admin_message_wrong_email_password'));
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
 
     }
 
@@ -365,15 +377,15 @@ class AccountsAdminController extends Container
      */
     public function registration(Request $request, Response $response, array $args) : Response
     {
-        if ($this->acl->isUserLoggedIn()) {
-            return $response->withRedirect($this->router->pathFor('admin.dashboard.index'));
+        if ($this->flextype->container('acl')->isUserLoggedIn()) {
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.dashboard.index'));
         }
 
         if ($this->isSuperAdminExists()) {
-            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
         }
 
-        return $this->twig->render($response, 'plugins/accounts-admin/templates/registration.html');
+        return $this->flextype->container('twig')->render($response, 'plugins/accounts-admin/templates/registration.html');
     }
 
     /**
@@ -385,7 +397,7 @@ class AccountsAdminController extends Container
      */
     public function resetPassword(Request $request, Response $response, array $args) : Response
     {
-        return $this->twig->render($response, 'plugins/accounts-admin/templates/reset-password.html');
+        return $this->flextype->container('twig')->render($response, 'plugins/accounts-admin/templates/reset-password.html');
     }
 
     /**
@@ -402,11 +414,11 @@ class AccountsAdminController extends Container
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = $this->yaml->decode($user_file_body);
+            $user_file_data = $this->flextype->container('yaml')->decode($user_file_body);
 
             if (is_null($user_file_data['hashed_password_reset'])) {
-                $this->flash->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
-                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+                $this->flextype->container('flash')->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
             }
 
             if (password_verify(trim($args['hash']), $user_file_data['hashed_password_reset'])) {
@@ -421,65 +433,72 @@ class AccountsAdminController extends Container
 
                 if (Filesystem::write(
                     PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                    $this->yaml->encode($user_file_data)
+                    $this->flextype->container('yaml')->encode($user_file_data)
                 )) {
-                    // Instantiation and passing `true` enables exceptions
-                    $mail = new PHPMailer(true);
 
-                    $new_password_email = $this->frontmatter->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'));
+                    try {
 
-                    //Recipients
-                    $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                    $mail->addAddress($email, $email);
+                        // Instantiation and passing `true` enables exceptions
+                        $mail = new PHPMailer(true);
 
-                    if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
-                        $url = $this->registry->get('flextype.settings.url');
-                    } else {
-                        $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                        $new_password_email = $this->flextype->container('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'));
+
+                        //Recipients
+                        $mail->setFrom($this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.email'), $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'));
+                        $mail->addAddress($email, $email);
+
+                        if ($this->flextype->container('registry')->has('flextype.settings.url') && $this->flextype->container('registry')->get('flextype.settings.url') !== '') {
+                            $url = $this->flextype->container('registry')->get('flextype.settings.url');
+                        } else {
+                            $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                        }
+
+                        if (isset($user_file_data['full_name'])) {
+                            $user = $user_file_data['full_name'];
+                        } else {
+                            $user = $email;
+                        }
+
+                        $tags = [
+                            '{sitename}' => $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'),
+                            '{email}' => $email,
+                            '{user}' => $user,
+                            '{password}' => $raw_password,
+                            '{url}' => $url,
+                        ];
+
+                        $subject = $this->flextype->container('shortcode')->process($new_password_email['subject']);
+                        $content = $this->flextype->container('markdown')->parse($this->flextype->container('shortcode')->process($new_password_email['content']));
+
+                        // Content
+                        $mail->isHTML(true);
+                        $mail->Subject = strtr($subject, $tags);
+                        $mail->Body    = strtr($content, $tags);
+
+                        // Send email
+                        $mail->send();
+
+                    } catch (\Exception $e) {
+
                     }
 
-                    if (isset($user_file_data['full_name'])) {
-                        $user = $user_file_data['full_name'];
-                    } else {
-                        $user = $email;
-                    }
-
-                    $tags = [
-                        '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                        '{email}' => $email,
-                        '{user}' => $user,
-                        '{password}' => $raw_password,
-                        '{url}' => $url,
-                    ];
-
-                    $subject = $this->shortcode->parse($new_password_email['subject']);
-                    $content = $this->markdown->parse($this->shortcode->parse($new_password_email['content']));
-
-                    // Content
-                    $mail->isHTML(true);
-                    $mail->Subject = strtr($subject, $tags);
-                    $mail->Body    = strtr($content, $tags);
-
-                    // Send email
-                    $mail->send();
-
-                    $this->flash->addMessage('success', __('accounts_admin_message_new_password_was_sended'));
+                    $this->flextype->container('flash')->addMessage('success', __('accounts_admin_message_new_password_was_sended'));
 
                     // Run event onAccountsAdminNewPasswordReset
-                    $this->emitter->emit('onAccountsAdminNewPasswordReset');
+                    $this->flextype->container('emitter')->emit('onAccountsAdminNewPasswordReset');
 
-                    return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+                    return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
                 }
 
-                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
             }
 
-            $this->flash->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
+            $this->flextype->container('flash')->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
 
     }
 
@@ -508,65 +527,71 @@ class AccountsAdminController extends Container
             $post_data['hashed_password_reset'] = password_hash($raw_hash, PASSWORD_BCRYPT);
 
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = $this->yaml->decode($user_file_body);
+            $user_file_data = $this->flextype->container('yaml')->decode($user_file_body);
 
             // Create account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                $this->yaml->encode(
+                $this->flextype->container('yaml')->encode(
                     array_merge($user_file_data, $post_data)
                 )
             )) {
-                // Instantiation and passing `true` enables exceptions
-                $mail = new PHPMailer(true);
+                try {
 
-                $reset_password_email = $this->frontmatter->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'));
+                    // Instantiation and passing `true` enables exceptions
+                    $mail = new PHPMailer(true);
 
-                //Recipients
-                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                $mail->addAddress($email, $email);
+                    $reset_password_email = $this->flextype->container('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'));
 
-                if ($this->registry->has('flextype.settings.url') && $this->registry->get('flextype.settings.url') !== '') {
-                    $url = $this->registry->get('flextype.settings.url');
-                } else {
-                    $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                    //Recipients
+                    $mail->setFrom($this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.email'), $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'));
+                    $mail->addAddress($email, $email);
+
+                    if ($this->flextype->container('registry')->has('flextype.settings.url') && $this->flextype->container('registry')->get('flextype.settings.url') !== '') {
+                        $url = $this->flextype->container('registry')->get('flextype.settings.url');
+                    } else {
+                        $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
+                    }
+
+                    if (isset($user_file_data['full_name'])) {
+                        $user = $user_file_data['full_name'];
+                    } else {
+                        $user = $email;
+                    }
+
+                    $tags = [
+                        '{sitename}' => $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'),
+                        '{email}' => $email,
+                        '{user}' => $user,
+                        '{url}' => $url,
+                        '{new_hash}' => $raw_hash,
+                    ];
+
+                    $subject = $this->flextype->container('shortcode')->process($reset_password_email['subject']);
+                    $content = $this->flextype->container('markdown')->parse($this->flextype->container('shortcode')->process($reset_password_email['content']));
+
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = strtr($subject, $tags);
+                    $mail->Body    = strtr($content, $tags);
+
+                    // Send email
+                    $mail->send();
+
+                } catch (\Exception $e) {
+
                 }
-
-                if (isset($user_file_data['full_name'])) {
-                    $user = $user_file_data['full_name'];
-                } else {
-                    $user = $email;
-                }
-
-                $tags = [
-                    '{sitename}' => $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                    '{email}' => $email,
-                    '{user}' => $user,
-                    '{url}' => $url,
-                    '{new_hash}' => $raw_hash,
-                ];
-
-                $subject = $this->shortcode->parse($reset_password_email['subject']);
-                $content = $this->markdown->parse($this->shortcode->parse($reset_password_email['content']));
-
-                // Content
-                $mail->isHTML(true);
-                $mail->Subject = strtr($subject, $tags);
-                $mail->Body    = strtr($content, $tags);
-
-                // Send email
-                $mail->send();
 
                 // Run event onAccountsAdminNewPasswordReset
-                $this->emitter->emit('onAccountsAdminNewPasswordReset');
+                $this->flextype->container('emitter')->emit('onAccountsAdminNewPasswordReset');
 
-                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
             }
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
     }
 
     /**
@@ -579,11 +604,11 @@ class AccountsAdminController extends Container
     public function registrationProcess(Request $request, Response $response, array $args) : Response
     {
         if ($this->isSuperAdminExists()) {
-            return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
         }
 
         // Clear cache before proccess
-        $this->cache->purgeAll();
+        $this->flextype->container('cache')->purgeAll();
 
         // Get Data from POST
         $post_data = $request->getParsedBody();
@@ -596,7 +621,7 @@ class AccountsAdminController extends Container
             $uuid = Uuid::uuid4()->toString();
 
             // Get time
-            $time = date($this->registry->get('flextype.settings.date_format'), time());
+            $time = date($this->flextype->container('registry')->get('flextype.settings.date_format'), time());
 
             // Get hashed password
             $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
@@ -619,43 +644,49 @@ class AccountsAdminController extends Container
             // Create admin account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                $this->yaml->encode(
+                $this->flextype->container('yaml')->encode(
                     $post_data
                 )
             )) {
-                // Instantiation and passing `true` enables exceptions
-                $mail = new PHPMailer(true);
+                try {
 
-                $new_user_email = $this->frontmatter->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
+                    // Instantiation and passing `true` enables exceptions
+                    $mail = new PHPMailer(true);
 
-                //Recipients
-                $mail->setFrom($this->registry->get('plugins.accounts-admin.settings.from.email'), $this->registry->get('plugins.accounts-admin.settings.from.name'));
-                $mail->addAddress($email, $email);
+                    $new_user_email = $this->flextype->container('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
 
-                if (isset($post_data['full_name'])) {
-                    $user = $post_data['full_name'];
-                } else {
-                    $user = $email;
+                    //Recipients
+                    $mail->setFrom($this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.email'), $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'));
+                    $mail->addAddress($email, $email);
+
+                    if (isset($post_data['full_name'])) {
+                        $user = $post_data['full_name'];
+                    } else {
+                        $user = $email;
+                    }
+
+                    $tags = [
+                        '{sitename}' =>  $this->flextype->container('registry')->get('plugins.accounts-admin.settings.from.name'),
+                        '{user}'    => $user,
+                    ];
+
+                    $subject = $this->flextype->container('shortcode')->process($new_user_email['subject']);
+                    $content = $this->flextype->container('markdown')->parse($this->flextype->container('shortcode')->process($new_user_email['content']));
+
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = strtr($subject, $tags);
+                    $mail->Body    = strtr($content, $tags);
+
+                    // Send email
+                    $mail->send();
+
+                } catch (\Exception $e) {
+
                 }
 
-                $tags = [
-                    '{sitename}' =>  $this->registry->get('plugins.accounts-admin.settings.from.name'),
-                    '{user}'    => $user,
-                ];
-
-                $subject = $this->shortcode->parse($new_user_email['subject']);
-                $content = $this->markdown->parse($this->shortcode->parse($new_user_email['content']));
-
-                // Content
-                $mail->isHTML(true);
-                $mail->Subject = strtr($subject, $tags);
-                $mail->Body    = strtr($content, $tags);
-
-                // Send email
-                $mail->send();
-
                 // Update default entry
-                $this->entries->update('home', ['created_by' => $uuid, 'published_by' => $uuid, 'published_at' => $time, 'created_at' => $time]);
+                $this->flextype->container('entries')->update('home', ['created_by' => $uuid, 'published_by' => $uuid, 'published_at' => $time, 'created_at' => $time]);
 
                 // Create default entries delivery token
                 $api_delivery_entries_token = bin2hex(random_bytes(16));
@@ -666,7 +697,7 @@ class AccountsAdminController extends Container
 
                 Filesystem::write(
                     $api_delivery_entries_token_file_path,
-                    $this->yaml->encode([
+                    $this->flextype->container('yaml')->encode([
                         'title' => 'Default',
                         'icon' => 'fas fa-database',
                         'limit_calls' => (int) 0,
@@ -689,7 +720,7 @@ class AccountsAdminController extends Container
 
                 Filesystem::write(
                     $api_images_token_file_path,
-                    $this->yaml->encode([
+                    $this->flextype->container('yaml')->encode([
                         'title' => 'Default',
                         'icon' => 'far fa-images',
                         'limit_calls' => (int) 0,
@@ -712,7 +743,7 @@ class AccountsAdminController extends Container
 
                 Filesystem::write(
                     $api_delivery_registry_token_file_path,
-                    $this->yaml->encode([
+                    $this->flextype->container('yaml')->encode([
                         'title' => 'Default',
                         'icon' => 'fas fa-archive',
                         'limit_calls' => (int) 0,
@@ -728,13 +759,13 @@ class AccountsAdminController extends Container
 
                 // Set Default API's tokens
                 $custom_flextype_settings_file_path = PATH['project'] . '/config/flextype/settings.yaml';
-                $custom_flextype_settings_file_data = $this->yaml->decode(Filesystem::read($custom_flextype_settings_file_path));
+                $custom_flextype_settings_file_data = $this->flextype->container('yaml')->decode(Filesystem::read($custom_flextype_settings_file_path));
 
                 $custom_flextype_settings_file_data['api']['images']['default_token']   = $api_images_token;
                 $custom_flextype_settings_file_data['api']['entries']['default_token']  = $api_delivery_entries_token;
                 $custom_flextype_settings_file_data['api']['registry']['default_token'] = $api_delivery_registry_token;
 
-                Filesystem::write($custom_flextype_settings_file_path, $this->yaml->encode($custom_flextype_settings_file_data));
+                Filesystem::write($custom_flextype_settings_file_path, $this->flextype->container('yaml')->encode($custom_flextype_settings_file_data));
 
                 // Create uploads dir for default entries
                 if (! Filesystem::has(PATH['project'] . '/uploads/entries/home/')) {
@@ -742,20 +773,20 @@ class AccountsAdminController extends Container
                 }
 
                 // Set super admin regisered = true
-                $accounts_admin_config = $this->yaml->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
+                $accounts_admin_config = $this->flextype->container('yaml')->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
                 $accounts_admin_config['supper_admin_registered'] = true;
-                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', $this->yaml->encode($accounts_admin_config));
+                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', $this->flextype->container('yaml')->encode($accounts_admin_config));
 
                 // Clear cache after proccess
-                $this->cache->purgeAll();
+                $this->flextype->container('cache')->purgeAll();
 
-                return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+                return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
             }
 
-            return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
+            return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.registration'));
         }
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.registration'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.registration'));
     }
 
     /**
@@ -769,13 +800,13 @@ class AccountsAdminController extends Container
         Session::destroy();
 
         // Run event onAccountsAdminLogout
-        $this->emitter->emit('onAccountsAdminLogout');
+        $this->flextype->container('emitter')->emit('onAccountsAdminLogout');
 
-        return $response->withRedirect($this->router->pathFor('admin.accounts.login'));
+        return $response->withRedirect($this->flextype->container('router')->pathFor('admin.accounts.login'));
     }
 
     protected function isSuperAdminExists()
     {
-        return $this->registry->get('plugins.accounts-admin.settings.supper_admin_registered');
+        return $this->flextype->container('registry')->get('plugins.accounts-admin.settings.supper_admin_registered');
     }
 }
