@@ -17,11 +17,11 @@ use Flextype\Component\I18n\I18n;
 use function Flextype\Component\I18n\__;
 
 // Add Admin Navigation
-$flextype->container('registry')->set('plugins.admin.settings.navigation.extends.accounts', ['title' => __('accounts_admin_accounts'),'icon' => 'fas fa-users', 'link' => $flextype->container('router')->pathFor('admin.accounts.index')]);
+flextype('registry')->set('plugins.admin.settings.navigation.extends.accounts', ['title' => __('accounts_admin_accounts'),'icon' => 'fas fa-users', 'link' => flextype('router')->pathFor('admin.accounts.index')]);
 
 /**
  * Add Accounts Admin Controller to Flextype container
  */
-$flextype->container()['AccountsAdminController'] = static function () use ($flextype) {
-    return new AccountsAdminController($flextype);
+flextype()->container()['AccountsAdminController'] = static function () {
+    return new AccountsAdminController();
 };

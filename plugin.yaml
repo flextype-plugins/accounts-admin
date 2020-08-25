@@ -1,5 +1,5 @@
 name: Accounts Admin
-version: 1.3.0
+version: 1.4.0
 description: Accounts Admin Plugin to manage users accounts in Flextype Admin Panel.
 icon: fas fa-users
 author:
@@ -11,7 +11,7 @@ bugs: https://github.com/flextype-plugins/accounts-admin/issues
 license: MIT
 
 dependencies:
-  flextype: 0.9.10
+  flextype: 0.9.11
   twig: '>=1.0.0'
   admin: '>=1.0.0'
   form: '>=1.0.0'
