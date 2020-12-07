@@ -13,7 +13,7 @@ namespace Flextype\Plugin\AccountsAdmin\Controllers;
 
 use Flextype\Component\Arrays\Arrays;
 use Flextype\Component\Filesystem\Filesystem;
-use Flextype\Component\Session\Session;
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -43,14 +43,14 @@ class AccountsAdminController
     /**
      * Flextype Application
      */
-     
+
 
     /**
      * __construct
      */
      public function __construct()
      {
-         
+
      }
 
     /**
@@ -314,6 +314,7 @@ class AccountsAdminController
      */
     public function login(Request $request, Response $response, array $args) : Response
     {
+
         if (flextype('acl')->isUserLoggedIn()) {
             return $response->withRedirect(flextype('router')->pathFor('admin.dashboard.index'));
         }
@@ -350,6 +351,7 @@ class AccountsAdminController
                 flextype('acl')->setUserLoggedInRoles($user_file['roles']);
                 flextype('acl')->setUserLoggedInUuid($user_file['uuid']);
                 flextype('acl')->setUserLoggedIn(true);
+
 
                 // Run event onAccountsAdminUserLoggedIn
                 flextype('emitter')->emit('onAccountsAdminUserLoggedIn');
@@ -608,7 +610,7 @@ class AccountsAdminController
         }
 
         // Clear cache before proccess
-        flextype('cache')->purgeAll();
+        Filesystem::deleteDir(PATH['tmp']);
 
         // Get Data from POST
         $post_data = $request->getParsedBody();
@@ -778,7 +780,7 @@ class AccountsAdminController
                 Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('yaml')->encode($accounts_admin_config));
 
                 // Clear cache after proccess
-                flextype('cache')->purgeAll();
+                Filesystem::deleteDir(PATH['tmp']);
 
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
             }
@@ -797,7 +799,7 @@ class AccountsAdminController
      */
     public function logoutProcess(Request $request, Response $response) : Response
     {
-        Session::destroy();
+        flextype('session')->destroy();
 
         // Run event onAccountsAdminLogout
         flextype('emitter')->emit('onAccountsAdminLogout');
