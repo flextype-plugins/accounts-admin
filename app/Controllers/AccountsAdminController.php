@@ -70,7 +70,7 @@ class AccountsAdminController
                 continue;
             }
 
-            $account_to_store = flextype('yaml')->decode(Filesystem::read($account['path'] . '/profile.yaml'));
+            $account_to_store = flextype('serializers')->yaml()->decode(Filesystem::read($account['path'] . '/profile.yaml'));
 
             $_path = explode('/', $account['path']);
             $account_to_store['email'] = array_pop($_path);
@@ -174,7 +174,7 @@ class AccountsAdminController
             // Create account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('yaml')->encode(
+                flextype('serializers')->yaml()->encode(
                     $post_data
                 )
             )) {
@@ -203,7 +203,7 @@ class AccountsAdminController
         $email = $query['email'];
 
         // Get Profile
-        $profile = flextype('yaml')->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'));
+        $profile = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'));
 
         Arrays::delete($profile, 'hashed_password');
         Arrays::delete($profile, 'hashed_password_reset');
@@ -264,12 +264,12 @@ class AccountsAdminController
             }
 
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = flextype('yaml')->decode($user_file_body);
+            $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
 
             // Create admin account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('yaml')->encode(
+                flextype('serializers')->yaml()->encode(
                     array_merge($user_file_data, $post_data)
                 )
             )) {
@@ -343,7 +343,7 @@ class AccountsAdminController
         $email = $post_data['email'];
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            $user_file = flextype('yaml')->decode(Filesystem::read($_user_file), false);
+            $user_file = flextype('serializers')->yaml()->decode(Filesystem::read($_user_file), false);
 
             if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
 
@@ -416,7 +416,7 @@ class AccountsAdminController
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = flextype('yaml')->decode($user_file_body);
+            $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
 
             if (is_null($user_file_data['hashed_password_reset'])) {
                 flextype('flash')->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
@@ -435,7 +435,7 @@ class AccountsAdminController
 
                 if (Filesystem::write(
                     PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                    flextype('yaml')->encode($user_file_data)
+                    flextype('serializers')->yaml()->encode($user_file_data)
                 )) {
 
                     try {
@@ -443,7 +443,7 @@ class AccountsAdminController
                         // Instantiation and passing `true` enables exceptions
                         $mail = new PHPMailer(true);
 
-                        $new_password_email = flextype('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'));
+                        $new_password_email = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'));
 
                         //Recipients
                         $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
@@ -469,8 +469,8 @@ class AccountsAdminController
                             '{url}' => $url,
                         ];
 
-                        $subject = flextype('shortcode')->process($new_password_email['subject']);
-                        $content = flextype('markdown')->parse(flextype('shortcode')->process($new_password_email['content']));
+                        $subject = flextype('parsers')->shortcode()->process($new_password_email['subject']);
+                        $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($new_password_email['content']));
 
                         // Content
                         $mail->isHTML(true);
@@ -529,12 +529,12 @@ class AccountsAdminController
             $post_data['hashed_password_reset'] = password_hash($raw_hash, PASSWORD_BCRYPT);
 
             $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = flextype('yaml')->decode($user_file_body);
+            $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
 
             // Create account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('yaml')->encode(
+                flextype('serializers')->yaml()->encode(
                     array_merge($user_file_data, $post_data)
                 )
             )) {
@@ -543,7 +543,7 @@ class AccountsAdminController
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $reset_password_email = flextype('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'));
+                    $reset_password_email = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/reset-password.md'));
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
@@ -569,8 +569,8 @@ class AccountsAdminController
                         '{new_hash}' => $raw_hash,
                     ];
 
-                    $subject = flextype('shortcode')->process($reset_password_email['subject']);
-                    $content = flextype('markdown')->parse(flextype('shortcode')->process($reset_password_email['content']));
+                    $subject = flextype('parsers')->shortcode()->process($reset_password_email['subject']);
+                    $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($reset_password_email['content']));
 
                     // Content
                     $mail->isHTML(true);
@@ -646,7 +646,7 @@ class AccountsAdminController
             // Create admin account
             if (Filesystem::write(
                 PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('yaml')->encode(
+                flextype('serializers')->yaml()->encode(
                     $post_data
                 )
             )) {
@@ -655,7 +655,7 @@ class AccountsAdminController
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $new_user_email = flextype('frontmatter')->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
+                    $new_user_email = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
@@ -672,8 +672,8 @@ class AccountsAdminController
                         '{user}'    => $user,
                     ];
 
-                    $subject = flextype('shortcode')->process($new_user_email['subject']);
-                    $content = flextype('markdown')->parse(flextype('shortcode')->process($new_user_email['content']));
+                    $subject = flextype('parsers')->shortcode()->process($new_user_email['subject']);
+                    $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($new_user_email['content']));
 
                     // Content
                     $mail->isHTML(true);
@@ -699,7 +699,7 @@ class AccountsAdminController
 
                 Filesystem::write(
                     $api_delivery_entries_token_file_path,
-                    flextype('yaml')->encode([
+                    flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => 'fas fa-database',
                         'limit_calls' => (int) 0,
@@ -722,7 +722,7 @@ class AccountsAdminController
 
                 Filesystem::write(
                     $api_images_token_file_path,
-                    flextype('yaml')->encode([
+                    flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => 'far fa-images',
                         'limit_calls' => (int) 0,
@@ -745,7 +745,53 @@ class AccountsAdminController
 
                 Filesystem::write(
                     $api_delivery_registry_token_file_path,
-                    flextype('yaml')->encode([
+                    flextype('serializers')->yaml()->encode([
+                        'title' => 'Default',
+                        'icon' => 'fas fa-archive',
+                        'limit_calls' => (int) 0,
+                        'calls' => (int) 0,
+                        'state' => 'enabled',
+                        'uuid' => $uuid,
+                        'created_by' => $uuid,
+                        'created_at' => $time,
+                        'updated_by' => $uuid,
+                        'updated_at' => $time,
+                    ])
+                );
+
+                // Create default media files delivery token
+                $api_delivery_media_files_token = bin2hex(random_bytes(16));
+                $api_delivery_media_files_token_dir_path  = PATH['project'] . '/tokens/media/files/' . $api_delivery_media_files_token;
+                $api_delivery_media_files_token_file_path = $api_delivery_media_files_token_dir_path . '/token.yaml';
+
+                if (! Filesystem::has($api_delivery_media_files_token_dir_path)) Filesystem::createDir($api_delivery_media_files_token_dir_path);
+
+                Filesystem::write(
+                    $api_delivery_media_files_token_file_path,
+                    flextype('serializers')->yaml()->encode([
+                        'title' => 'Default',
+                        'icon' => 'fas fa-archive',
+                        'limit_calls' => (int) 0,
+                        'calls' => (int) 0,
+                        'state' => 'enabled',
+                        'uuid' => $uuid,
+                        'created_by' => $uuid,
+                        'created_at' => $time,
+                        'updated_by' => $uuid,
+                        'updated_at' => $time,
+                    ])
+                );
+
+                // Create default media folders delivery token
+                $api_delivery_media_folders_token = bin2hex(random_bytes(16));
+                $api_delivery_media_folders_token_dir_path  = PATH['project'] . '/tokens/media/folders/' . $api_delivery_media_folders_token;
+                $api_delivery_media_folders_token_file_path = $api_delivery_media_folders_token_dir_path . '/token.yaml';
+
+                if (! Filesystem::has($api_delivery_media_folders_token_dir_path)) Filesystem::createDir($api_delivery_media_folders_token_dir_path);
+
+                Filesystem::write(
+                    $api_delivery_media_folders_token_file_path,
+                    flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => 'fas fa-archive',
                         'limit_calls' => (int) 0,
@@ -761,23 +807,26 @@ class AccountsAdminController
 
                 // Set Default API's tokens
                 $custom_flextype_settings_file_path = PATH['project'] . '/config/flextype/settings.yaml';
-                $custom_flextype_settings_file_data = flextype('yaml')->decode(Filesystem::read($custom_flextype_settings_file_path));
+                $custom_flextype_settings_file_data = flextype('serializers')->yaml()->decode(Filesystem::read($custom_flextype_settings_file_path));
 
                 $custom_flextype_settings_file_data['api']['images']['default_token']   = $api_images_token;
                 $custom_flextype_settings_file_data['api']['entries']['default_token']  = $api_delivery_entries_token;
                 $custom_flextype_settings_file_data['api']['registry']['default_token'] = $api_delivery_registry_token;
+                $custom_flextype_settings_file_data['api']['media']['files']['default_token'] = $api_delivery_media_files_token;
+                $custom_flextype_settings_file_data['api']['media']['folders']['default_token'] = $api_delivery_media_folders_token;
 
-                Filesystem::write($custom_flextype_settings_file_path, flextype('yaml')->encode($custom_flextype_settings_file_data));
+
+                Filesystem::write($custom_flextype_settings_file_path, flextype('serializers')->yaml()->encode($custom_flextype_settings_file_data));
 
                 // Create uploads dir for default entries
-                if (! Filesystem::has(PATH['project'] . '/uploads/entries/home/')) {
-                    Filesystem::createDir(PATH['project'] . '/uploads/entries/home/');
+                if (! Filesystem::has(PATH['project'] . '/media/entries/home/')) {
+                    Filesystem::createDir(PATH['project'] . '/media/entries/home/');
                 }
 
                 // Set super admin regisered = true
-                $accounts_admin_config = flextype('yaml')->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
+                $accounts_admin_config = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
                 $accounts_admin_config['supper_admin_registered'] = true;
-                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('yaml')->encode($accounts_admin_config));
+                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('serializers')->yaml()->encode($accounts_admin_config));
 
                 // Clear cache after proccess
                 Filesystem::deleteDir(PATH['tmp']);
