@@ -1,3 +1,10 @@
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/flextype-plugins/accounts-admin) (2020-12-20)
+
+### Features
+
+* **core** update code base for new Flextype 0.9.13
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/flextype-plugins/accounts-admin) (2020-12-07)
 
