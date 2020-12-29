@@ -2,7 +2,7 @@
 enabled: true
 
 # Accounts Admin plugin priority
-priority: 50
+priority: 90
 
 # Is super admin registered
 supper_admin_registered: false

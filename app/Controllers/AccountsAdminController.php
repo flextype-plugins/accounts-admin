@@ -41,19 +41,6 @@ use function trim;
 class AccountsAdminController
 {
     /**
-     * Flextype Application
-     */
-
-
-    /**
-     * __construct
-     */
-     public function __construct()
-     {
-
-     }
-
-    /**
      * Index page
      *
      * @param Request  $request  PSR7 request
