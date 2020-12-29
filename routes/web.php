@@ -6,6 +6,7 @@ use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInMiddleware;
 use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
 
 flextype()->group('/' . $admin_route . '/accounts', function () {
+    flextype()->get('/no-access', function() { return 'no-access'; })->setName('admin.accounts.no-access');
     flextype()->get('/login', 'AccountsAdminController:login')->setName('admin.accounts.login');
     flextype()->post('/login', 'AccountsAdminController:loginProcess')->setName('admin.accounts.loginProcess');
     flextype()->get('/reset-password', 'AccountsAdminController:resetPassword')->setName('admin.accounts.resetPassword');

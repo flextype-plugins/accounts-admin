@@ -1,5 +1,5 @@
 {% extends "plugins/accounts-admin/templates/partials/base.html" %}
 
 {% block content %}
-    {{ form.render(yaml_decode(filesystem_read(PATH_PROJECT ~ '/fieldsets/accounts-admin-add.yaml')), {})|raw }}
+    {{ flextype.form.render(flextype.serializers.yaml.decode(filesystem().file(PATH_PROJECT ~ '/fieldsets/accounts-admin-add.yaml').get()), {})|raw }}
 {% endblock %}
