@@ -19,8 +19,3 @@ use function Flextype\Component\I18n\__;
 
 // Add Admin Navigation
 flextype('registry')->set('plugins.admin.settings.navigation.extends.accounts', ['title' => __('accounts_admin_accounts'),'icon' => 'fas fa-users', 'link' => flextype('router')->pathFor('admin.accounts.index')]);
-
-/**
- * Add Accounts Admin Controller to Flextype container
- */
-flextype()->container()['AccountsAdminController'] = fn() => new AccountsAdminController();
