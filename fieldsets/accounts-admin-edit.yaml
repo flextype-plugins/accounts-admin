@@ -1,6 +1,8 @@
 title: 'Edit Account'
 default_field: title
-icon: fas fa-user
+icon:
+  name: user
+  set: "fontawesome|solid"
 size: 4/12
 hide: true
 form:
