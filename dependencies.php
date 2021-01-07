@@ -18,4 +18,4 @@ use function Flextype\Component\I18n\__;
 
 
 // Add Admin Navigation
-flextype('registry')->set('plugins.admin.settings.navigation.extends.accounts', ['title' => __('accounts_admin_accounts'),'icon' => 'fas fa-users', 'link' => flextype('router')->pathFor('admin.accounts.index')]);
+flextype('registry')->set('plugins.admin.settings.navigation.extends.accounts', ['title' => __('accounts_admin_accounts'), 'icon' => ['name' => 'users', 'set' => 'fontawesome|solid'], 'link' => flextype('router')->pathFor('admin.accounts.index')]);
