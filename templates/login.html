@@ -1,10 +1,5 @@
 {% extends "plugins/accounts-admin/templates/partials/base.html" %}
 
 {% block content %}
-    <div style="display: flex; align-items: center; justify-content: center;">
-        <h3>{{ __('accounts_admin_login') }}</h3>
-    </div>
-    <div style="display: flex; align-items: center; justify-content: center;">
-        {{ flextype.form.render(flextype.serializers.yaml.decode(filesystem().file(PATH_PROJECT ~ '/fieldsets/accounts-admin-login.yaml').get()), {})|raw }}
-    </div>
+    {{ flextype.blueprints.render('accounts-admin/login') }}
 {% endblock %}
