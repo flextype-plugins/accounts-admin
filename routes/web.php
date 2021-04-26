@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Flextype\Middlewares\CsrfMiddleware;
 use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInMiddleware;
 use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
 use Flextype\Plugin\AccountsAdmin\Controllers\AccountsAdminController;
@@ -15,7 +16,7 @@ flextype()->group('/' . $admin_route . '/accounts', function () {
     flextype()->get('/new-password/{email}/{hash}', AccountsAdminController::class . ':newPasswordProcess')->setName('admin.accounts.newPasswordProcess');
     flextype()->get('/registration', AccountsAdminController::class . ':registration')->setName('admin.accounts.registration');
     flextype()->post('/registration', AccountsAdminController::class . ':registrationProcess')->setName('admin.accounts.registrationProcess');
-})->add('csrf');
+})->add(new CsrfMiddleware());
 
 flextype()->group('/' . $admin_route . '/accounts', function () {
     flextype()->get('', AccountsAdminController::class . ':index')->setName('admin.accounts.index');
@@ -28,4 +29,4 @@ flextype()->group('/' . $admin_route . '/accounts', function () {
 })->add(new AclIsUserLoggedInMiddleware(['redirect' => 'admin.accounts.login']))
   ->add(new AclIsUserLoggedInRolesInMiddleware(['redirect' => (flextype()->getContainer()->acl->isUserLoggedIn() ? 'admin.accounts.no-access' : 'admin.accounts.login'),
                                                 'roles' => 'admin']))
-  ->add('csrf');
+  ->add(new CsrfMiddleware());

@@ -150,8 +150,8 @@ class AccountsAdminController
             $post_data['roles']           = $post_data['roles'];
             $post_data['state']           = $post_data['state'];
 
-            Arrays::delete($post_data, 'csrf_name');
-            Arrays::delete($post_data, 'csrf_value');
+            Arrays::delete($post_data, '__csrf_token');
+            
             Arrays::delete($post_data, 'password');
             Arrays::delete($post_data, 'form-save-action');
 
@@ -236,8 +236,8 @@ class AccountsAdminController
         $email = $query['email'];
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            Arrays::delete($post_data, 'csrf_name');
-            Arrays::delete($post_data, 'csrf_value');
+            Arrays::delete($post_data, '__csrf_token');
+            
             Arrays::delete($post_data, 'form-save-action');
             Arrays::delete($post_data, 'password');
             Arrays::delete($post_data, 'email');
@@ -507,8 +507,8 @@ class AccountsAdminController
         $email = $post_data['email'];
 
         if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            Arrays::delete($post_data, 'csrf_name');
-            Arrays::delete($post_data, 'csrf_value');
+            Arrays::delete($post_data, '__csrf_token');
+            
             Arrays::delete($post_data, 'form-save-action');
             Arrays::delete($post_data, 'email');
 
@@ -622,8 +622,8 @@ class AccountsAdminController
             $post_data['roles']           = 'admin';
             $post_data['state']           = 'enabled';
 
-            Arrays::delete($post_data, 'csrf_name');
-            Arrays::delete($post_data, 'csrf_value');
+            Arrays::delete($post_data, '__csrf_token');
+            
             Arrays::delete($post_data, 'password');
             Arrays::delete($post_data, 'form-save-action');
 
