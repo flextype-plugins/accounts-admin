@@ -29,7 +29,7 @@
                                     <i class="icon">{{ icon('person', 'bootstrap') }}</i>
                                 </td>
                                 <td class="ps-0">
-                                    <a href="{{ urlFor('admin.accounts.edit') }}?email={{ account.id }}">{{ account.id }}</a>
+                                    <a href="{{ urlFor('admin.accounts.edit') }}?id={{ account.id }}">{{ account.id }}</a>
                                 </td>
                                 <td>
                                     {{ account.roles }}
@@ -44,7 +44,7 @@
                                         </a>
                                         <ul class="dropdown-menu">
                                             <li>
-                                                <a class="dropdown-item d-flex align-items-center" href="{{ urlFor('admin.accounts.edit') }}?email={{ account.id }}">
+                                                <a class="dropdown-item d-flex align-items-center" href="{{ urlFor('admin.accounts.edit') }}?id={{ account.id }}">
                                                     <span class="pe-3 d-flex">{{ icon('pencil', 'bootstrap') }}</span> {{ __('admin_edit') }}
                                                 </a>
                                             </li>
