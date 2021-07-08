@@ -49,28 +49,8 @@ class AccountsAdminController
      */
     public function index(Request $request, Response $response, array $args) : Response
     {
-        $accounts_list = Filesystem::listContents(PATH['project'] . '/accounts');
-        $accounts      = [];
-
-        foreach ($accounts_list as $account) {
-            if ($account['type'] !== 'dir' || ! Filesystem::has($account['path'] . '/' . 'profile.yaml')) {
-                continue;
-            }
-
-            $account_to_store = flextype('serializers')->yaml()->decode(Filesystem::read($account['path'] . '/profile.yaml'));
-
-            $_path = explode('/', $account['path']);
-            $account_to_store['email'] = array_pop($_path);
-
-            Arrays::delete($account, 'hashed_password');
-            Arrays::delete($account, 'hashed_password_reset');
-
-
-            $accounts[] = $account_to_store;
-        }
-
         return flextype('twig')->render($response, 'plugins/accounts-admin/templates/index.html', [
-            'accounts_list' => $accounts,
+            'accountsList' => flextype('accounts')->fetch('', ['collection' => true, 'depth' => ['1']])->toArray(),
             'menu_item' => 'accounts-admin',
             'links' =>  [
                 'accounts' => [
