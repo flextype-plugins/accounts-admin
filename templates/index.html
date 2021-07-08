@@ -1,67 +1,82 @@
 {% extends "plugins/accounts-admin/templates/partials/base.html" %}
 
 {% block content %}
-    {% if (accounts_list | length > 0) %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>
-                        {{ tr('accounts_admin_email') }}
-                    </th>
-                    <th>
-                        {{ tr('accounts_admin_roles') }}
-                    </th>
-                    <th>
-                        {{ tr('accounts_admin_state') }}
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for account in accounts_list %}
-                    <tr>
-                        <td class="w-1 text-center">
-                            <i class="icon">{{ icon('user', 'fontawesome|solid') }}</i>
-                        </td>
-                        <td class="pl-0">
-                            <a href="{{ urlFor('admin.accounts.edit') }}?email={{ account.email }}">{{ account.email }}</a>
-                        </td>
-                        <td>
-                            {{ account.roles }}
-                        </td>
-                        <td>
-                            {{ account.state }}
-                        </td>
-                        <td class="text-right">
-                            <button type="button" class="js-dropdown-btn" data-dropdown="dropdown-{{ account.email }}">
-                                <i class="icon">{{ icon('ellipsis-h', 'fontawesome|solid') }}</i>
-                            </button>
-                            <div id="dropdown-{{ account.email }}" class="dropdown">
-                                <a class="dropdown__item" href="{{ urlFor('admin.accounts.edit') }}?email={{ account.email }}">
-                                    <i class="icon icon--white mr-3">{{ icon('edit', 'fontawesome|solid') }}</i>
-                                    {{ tr('accounts_admin_edit') }}</a>
-                                {% if flextype.acl.getUserLoggedInEmail() != account.email %}
-                                    <div class="dropdown__divider"></div>
-                                    <a class="dropdown__item" href="javascript:;" onclick="event.preventDefault(); deleteAccount('{{ account.email }}', {{ loop.index0 }});">
-                                        <i class="icon icon--white mr-3">{{ icon('trash-alt', 'fontawesome|solid') }}</i>
-                                        {{ tr('accounts_admin_delete') }}</a>
-                                    <form id="delete-account-email-{{ account.email }}" action="{{ urlFor('admin.accounts.deleteProcess') }}" method="POST" style="display: none;">
-                                        {{ csrf() }}
-                                        <input type="hidden" name="account-email" value="{{ account.email }}">
-                                    </form>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% if (accountsList | length > 0) %}
+    {{ flextype.blueprints.render('accounts-admin', {}, {'query': query}) }}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="50"></th>
+                            <th>
+                                {{ __('accounts_admin_email') }}
+                            </th>
+                            <th>
+                                {{ __('accounts_admin_roles') }}
+                            </th>
+                            <th>
+                                {{ __('accounts_admin_state') }}
+                            </th>
+                            <th width="50"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in accountsList %}
+                            <tr>
+                                <td class="text-center">
+                                    <i class="icon">{{ icon('person', 'bootstrap') }}</i>
+                                </td>
+                                <td class="ps-0">
+                                    <a href="{{ urlFor('admin.accounts.edit') }}?email={{ account.id }}">{{ account.id }}</a>
+                                </td>
+                                <td>
+                                    {{ account.roles }}
+                                </td>
+                                <td>
+                                    {{ account.state }}
+                                </td>
+                                <td class="text-right">
+                                    <div class="dropdown">
+                                        <a class="dropdown-toggle dropdown-dots" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{ icon('three-dots', 'bootstrap') }}
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="{{ urlFor('admin.accounts.edit') }}?email={{ account.id }}">
+                                                    <span class="pe-3 d-flex">{{ icon('pencil', 'bootstrap') }}</span> {{ __('admin_edit') }}
+                                                </a>
+                                            </li>
+                                            {% if flextype.acl.getUserLoggedInEmail() != account.id %}
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="javascript:;" onclick="confirmationAccountDelete(event, '{{ account.id }}');">
+                                                    <span class="pe-3 d-flex">{{ icon('trash', 'bootstrap') }}</span> {{ __('admin_delete') }}
+                                                </a>
+                                            </li>
+                                            <form id="delete-account-id-{{ account.id }}" action="{{ urlFor('admin.accounts.deleteProcess') }}" method="POST" style="display: none;">
+                                                {{ csrf() }}
+                                                <input type="hidden" name="account-id" value="{{ account.id }}">
+                                            </form>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
         <div class="text-center flex justify-center items-center h-full">
             <div>
                 <i class="icon icon--4xl">{{ icon('users', 'fontawesome|solid') }}</i>
-                <h3 class="text-2xl pt-4 pb-8">{{ tr('accounts_admin_you_have_no_acccounts') }}</h3>
+                <h3 class="text-2xl pt-4 pb-8">{{ __('accounts_admin_you_have_no_acccounts') }}</h3>
             </div>
         </div>
     {% endif %}
@@ -75,7 +90,7 @@
                 dropdown[row_num].hide();
             }
             Swal.fire(
-                {title: "{{ tr('accounts_admin_confirmation_required') }}", text: "{{ tr('accounts_admin_confirmation_required_for_account_delete') }}", showCancelButton: true, confirmButtonText: "{{ tr('admin_yes_iam_sure')|raw }}", cancelButtonText: "{{ tr('admin_cancel') }}", reverseButtons: true}
+                {title: "{{ __('accounts_admin_confirmation_required') }}", text: "{{ __('accounts_admin_confirmation_required_for_account_delete') }}", showCancelButton: true, confirmButtonText: "{{ __('admin_yes_iam_sure')|raw }}", cancelButtonText: "{{ __('admin_cancel') }}", reverseButtons: true}
             ).then((result) => {
                 if (result.value) {
                     document.getElementById('delete-account-email-' + email).submit();
