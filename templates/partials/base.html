@@ -1,10 +1,11 @@
 {% extends "plugins/admin/templates/partials/base.html" %}
 
-{% block admin_navigation_top_secondary %}
+{% block breadcrumbs %}
     {% if isCurrentUrl('admin.accounts.index') or
-    isCurrentUrl('admin.accounts.edit') or
-    isCurrentUrl('admin.accounts.add') %}
-        /
-        <span class="pr-1 pl-1">{{ id }}</span>
+        isCurrentUrl('admin.accounts.edit') or
+        isCurrentUrl('admin.accounts.add') %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ urlFor('admin.accounts.edit') }}?id={{ query.id }}">{{ query.id }}</a>
+        </li>
     {% endif %}
 {% endblock %}
