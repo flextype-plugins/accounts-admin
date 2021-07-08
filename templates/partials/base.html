@@ -4,8 +4,10 @@
     {% if isCurrentUrl('admin.accounts.index') or
         isCurrentUrl('admin.accounts.edit') or
         isCurrentUrl('admin.accounts.add') %}
-        <li class="nav-item">
-            <a class="nav-link" href="{{ urlFor('admin.accounts.edit') }}?id={{ query.id }}">{{ query.id }}</a>
-        </li>
+        {% if query.id %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ urlFor('admin.accounts.edit') }}?id={{ query.id }}">{{ query.id }}</a>
+            </li>
+        {% endif %}
     {% endif %}
 {% endblock %}
