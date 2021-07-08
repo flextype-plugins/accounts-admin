@@ -56,15 +56,8 @@ class AccountsAdminController
                 'accounts' => [
                     'link' => flextype('router')->pathFor('admin.accounts.index'),
                     'title' => __('accounts_admin_accounts'),
-                    'active' => true,
                 ],
-            ],
-            'buttons' => [
-                'accounts_add' => [
-                    'link' => flextype('router')->pathFor('admin.accounts.add'),
-                    'title' => __('accounts_admin_create_new_user'),
-                ],
-            ],
+            ]
         ]);
     }
 
@@ -166,31 +159,17 @@ class AccountsAdminController
         // Get Query Params
         $query = $request->getQueryParams();
 
-        // Get Profile ID
-        $email = $query['email'];
-
-        // Get Profile
-        $profile = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/accounts/' . $email . '/profile.yaml'));
-
-        Arrays::delete($profile, 'hashed_password');
-        Arrays::delete($profile, 'hashed_password_reset');
-
         return flextype('twig')->render(
             $response,
             'plugins/accounts-admin/templates/edit.html',
             [
                 'menu_item' => 'accounts',
-                'profile' => $profile,
-                'email' => $email,
+                'account' => flextype('accounts')->fetch($query['id'])->toArray(),
+                'query' => $query,
                 'links' =>  [
                     'accounts' => [
                         'link' => flextype('router')->pathFor('admin.accounts.index'),
                         'title' => __('accounts_admin_accounts'),
-                    ],
-                    'accounts_edit' => [
-                        'link' => flextype('router')->pathFor('admin.accounts.edit') . '?email=' . $query['email'],
-                        'title' => __('accounts_admin_edit'),
-                        'active' => true,
                     ],
                 ],
             ]
