@@ -99,45 +99,21 @@ class AccountsAdminController
      */
     public function addProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get Data from POST
-        $post_data = $request->getParsedBody();
+        // Get data from POST
+        $data = $request->getParsedBody();
 
-        // Get user email
-        $email = $post_data['email'];
+        // Process form
+        $form = flextype('blueprints')->form($data)->process();
 
-        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
+        if (! flextype('accounts')->has($form->get('fields.id'))) {
 
-            // Generate UUID
-            $uuid = Uuid::uuid4()->toString();
+            $id = $form->get('fields.id');
 
-            // Get time
-            $time = date(flextype('registry')->get('flextype.settings.date_format'), time());
+            $form->set('fields.hashed_password', password_hash($form->get('fields.password'), PASSWORD_BCRYPT));
+            $form->delete('fields.password');
+            $form->delete('fields.id');
 
-            // Get hashed password
-            $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
-
-            $post_data['email']           = $email;
-            $post_data['registered_at']   = $time;
-            $post_data['uuid']            = $uuid;
-            $post_data['hashed_password'] = $hashed_password;
-            $post_data['roles']           = $post_data['roles'];
-            $post_data['state']           = $post_data['state'];
-
-            Arrays::delete($post_data, '__csrf_token');
-            
-            Arrays::delete($post_data, 'password');
-            Arrays::delete($post_data, 'form-save-action');
-
-            // Create directory for account
-            Filesystem::createDir(PATH['project'] . '/accounts/' . $email);
-
-            // Create account
-            if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('serializers')->yaml()->encode(
-                    $post_data
-                )
-            )) {
+            if (flextype('accounts')->create($id, $form->get('fields'))) {
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.index'));
             }
 
