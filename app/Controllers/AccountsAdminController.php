@@ -190,14 +190,13 @@ class AccountsAdminController
      */
     public function deleteProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get email
-        $email = $request->getParsedBody()['account-email'];
+        // Get data from POST
+        $data = $request->getParsedBody();
 
         // Delete...
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            if (Filesystem::delete($_user_file)) {
-                flextype('flash')->addMessage('success', __('accounts_admin_message_account_deleted'));
-            }
+        if (flextype('accounts')->delete($data['account-id'])) {
+            flextype('flash')->addMessage('success', __('accounts_admin_message_account_deleted'));
+        } else {
             flextype('flash')->addMessage('error', __('accounts_admin_message_account_was_not_deleted'));
         }
 
