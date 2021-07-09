@@ -1,5 +1,6 @@
 {% extends "plugins/accounts-admin/templates/partials/base.html" %}
 
 {% block content %}
-    {{ flextype.form.render(flextype.serializers.yaml.decode(filesystem().file(PATH_PROJECT ~ '/fieldsets/accounts-admin-add.yaml').get()), {})|raw }}
+    {{ flextype.blueprints.render('accounts-admin/add', {}, {'query': query}) }}
 {% endblock %}
+ 
