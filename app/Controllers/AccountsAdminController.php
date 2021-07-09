@@ -195,55 +195,14 @@ class AccountsAdminController
             $form->set('fields.hashed_password', password_hash($form->get('fields.new_password'), PASSWORD_BCRYPT));
             $form->delete('fields.new_password');
         }
-        
+
         if (flextype('accounts')->update($form->get('fields.id'), $form->copy()->delete('fields.id')->get('fields'))) {
             flextype('flash')->addMessage('success', $form->get('messages.success'));
         } else {
             flextype('flash')->addMessage('error', $form->get('messages.error'));
         }
 
-        return $response->withRedirect($form->get('redirect'));  
-
-/*
-        // Get Data from POST
-        $post_data = $request->getParsedBody();
-
-        // Get email
-        $email = $query['email'];
-
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            Arrays::delete($post_data, '__csrf_token');
-            
-            Arrays::delete($post_data, 'form-save-action');
-            Arrays::delete($post_data, 'password');
-            Arrays::delete($post_data, 'email');
-
-            if (! empty($post_data['new_password'])) {
-                $post_data['hashed_password'] = password_hash($post_data['new_password'], PASSWORD_BCRYPT);
-                Arrays::delete($post_data, 'new_password');
-            } else {
-                Arrays::delete($post_data, 'password');
-                Arrays::delete($post_data, 'new_password');
-            }
-
-            $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
-
-            // Create admin account
-            if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('serializers')->yaml()->encode(
-                    array_merge($user_file_data, $post_data)
-                )
-            )) {
-                return $response->withRedirect(flextype('router')->pathFor('admin.accounts.index'));
-            }
-
-            return $response->withRedirect(flextype('router')->pathFor('admin.accounts.index'));
-        }
-
-        return $response->withRedirect(flextype('router')->pathFor('admin.accounts.index'));
-        */
+        return $response->withRedirect($form->get('redirect'));
     }
 
     /**
