@@ -185,9 +185,26 @@ class AccountsAdminController
      */
     public function editProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get Query Params
-        $query = $request->getQueryParams();
+        // Get data from POST
+        $data = $request->getParsedBody();
 
+        // Process form
+        $form = flextype('blueprints')->form($data)->process();
+
+        if ($form->get('fields.new_password') != null) {
+            $form->set('fields.hashed_password', password_hash($form->get('fields.new_password'), PASSWORD_BCRYPT));
+            $form->delete('fields.new_password');
+        }
+        
+        if (flextype('accounts')->update($form->get('fields.id'), $form->copy()->delete('fields.id')->get('fields'))) {
+            flextype('flash')->addMessage('success', $form->get('messages.success'));
+        } else {
+            flextype('flash')->addMessage('error', $form->get('messages.error'));
+        }
+
+        return $response->withRedirect($form->get('redirect'));  
+
+/*
         // Get Data from POST
         $post_data = $request->getParsedBody();
 
@@ -226,6 +243,7 @@ class AccountsAdminController
         }
 
         return $response->withRedirect(flextype('router')->pathFor('admin.accounts.index'));
+        */
     }
 
     /**
