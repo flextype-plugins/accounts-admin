@@ -238,14 +238,14 @@ class AccountsAdminController
         $post_data = $request->getParsedBody();
 
         // Get email
-        $email = $post_data['email'];
+        $id = $post_data['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $id . '/profile.yaml')) {
             $user_file = flextype('serializers')->yaml()->decode(Filesystem::read($_user_file), false);
 
             if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
 
-                flextype('acl')->setUserLoggedInEmail($email);
+                flextype('acl')->setUserLoggedInEmail($id);
                 flextype('acl')->setUserLoggedInRoles($user_file['roles']);
                 flextype('acl')->setUserLoggedInUuid($user_file['uuid']);
                 flextype('acl')->setUserLoggedIn(true);
@@ -310,9 +310,9 @@ class AccountsAdminController
     public function newPasswordProcess(Request $request, Response $response, array $args) : Response
     {
         // Get email
-        $email = $args['email'];
+        $id = $args['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $id . '/profile.yaml')) {
             $user_file_body = Filesystem::read($_user_file);
             $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
 
@@ -332,7 +332,7 @@ class AccountsAdminController
                 Arrays::delete($user_file_data, 'hashed_password_reset');
 
                 if (Filesystem::write(
-                    PATH['project'] . '/accounts/' . $email . '/profile.yaml',
+                    PATH['project'] . '/accounts/' . $id . '/profile.yaml',
                     flextype('serializers')->yaml()->encode($user_file_data)
                 )) {
 
@@ -345,7 +345,7 @@ class AccountsAdminController
 
                         //Recipients
                         $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
-                        $mail->addAddress($email, $email);
+                        $mail->addAddress($id, $id);
 
                         if (flextype('registry')->has('flextype.settings.url') && flextype('registry')->get('flextype.settings.url') !== '') {
                             $url = flextype('registry')->get('flextype.settings.url');
@@ -356,12 +356,12 @@ class AccountsAdminController
                         if (isset($user_file_data['full_name'])) {
                             $user = $user_file_data['full_name'];
                         } else {
-                            $user = $email;
+                            $user = $id;
                         }
 
                         $tags = [
                             '{sitename}' => flextype('registry')->get('plugins.accounts-admin.settings.from.name'),
-                            '{email}' => $email,
+                            '{email}' => $id,
                             '{user}' => $user,
                             '{password}' => $raw_password,
                             '{url}' => $url,
@@ -415,9 +415,9 @@ class AccountsAdminController
         $post_data = $request->getParsedBody();
 
         // Get email
-        $email = $post_data['email'];
+        $id = $post_data['email'];
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
+        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $id . '/profile.yaml')) {
             Arrays::delete($post_data, '__csrf_token');
             
             Arrays::delete($post_data, 'form-save-action');
@@ -431,7 +431,7 @@ class AccountsAdminController
 
             // Create account
             if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
+                PATH['project'] . '/accounts/' . $id . '/profile.yaml',
                 flextype('serializers')->yaml()->encode(
                     array_merge($user_file_data, $post_data)
                 )
@@ -445,7 +445,7 @@ class AccountsAdminController
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
-                    $mail->addAddress($email, $email);
+                    $mail->addAddress($id, $id);
 
                     if (flextype('registry')->has('flextype.settings.url') && flextype('registry')->get('flextype.settings.url') !== '') {
                         $url = flextype('registry')->get('flextype.settings.url');
@@ -456,12 +456,12 @@ class AccountsAdminController
                     if (isset($user_file_data['full_name'])) {
                         $user = $user_file_data['full_name'];
                     } else {
-                        $user = $email;
+                        $user = $id;
                     }
 
                     $tags = [
                         '{sitename}' => flextype('registry')->get('plugins.accounts-admin.settings.from.name'),
-                        '{email}' => $email,
+                        '{email}' => $id,
                         '{user}' => $user,
                         '{url}' => $url,
                         '{new_hash}' => $raw_hash,
@@ -507,62 +507,45 @@ class AccountsAdminController
             return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
         }
 
-        // Clear cache before proccess
-        Filesystem::deleteDir(PATH['tmp']);
+        // Clean `var` directory before proccess
+        if (filesystem()->directory(PATH['tmp'])->exists()) {
+            filesystem()->directory(PATH['tmp'])->clean();
+        }
 
-        // Get Data from POST
-        $post_data = $request->getParsedBody();
+        // Get data from POST
+        $data = $request->getParsedBody();
 
-        // Get email
-        $email = $post_data['email'];
+        // Process form
+        $form = flextype('blueprints')->form($data)->process();
 
-        if (! Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $email . '/profile.yaml')) {
-            // Generate UUID
-            $uuid = Uuid::uuid4()->toString();
-
-            // Get time
-            $time = date(flextype('registry')->get('flextype.settings.date_format'), time());
-
-            // Get hashed password
-            $hashed_password = password_hash($post_data['password'], PASSWORD_BCRYPT);
-
-            $post_data['email']           = $email;
-            $post_data['registered_at']   = $time;
-            $post_data['uuid']            = $uuid;
-            $post_data['hashed_password'] = $hashed_password;
-            $post_data['roles']           = 'admin';
-            $post_data['state']           = 'enabled';
-
-            Arrays::delete($post_data, '__csrf_token');
+        if (! flextype('accounts')->has($form->get('fields.id'))) {
             
-            Arrays::delete($post_data, 'password');
-            Arrays::delete($post_data, 'form-save-action');
-
-            // Create accounts directory and account
-            Filesystem::createDir(PATH['project'] . '/accounts/' . $post_data['email']);
+            $id = $form->get('fields.id');
+            
+            $form->set('fields.hashed_password', password_hash($form->get('fields.password'), PASSWORD_BCRYPT));
+            $form->set('fields.roles', 'admin');
+            $form->set('fields.state', 'enabled');
+            $form->delete('fields.password');
+            $form->delete('fields.id');
 
             // Create admin account
-            if (Filesystem::write(
-                PATH['project'] . '/accounts/' . $email . '/profile.yaml',
-                flextype('serializers')->yaml()->encode(
-                    $post_data
-                )
-            )) {
+   
+            if (flextype('accounts')->create($id, $form->get('fields'))) {
                 try {
 
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $new_user_email = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
+                    $newUserEmail = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
-                    $mail->addAddress($email, $email);
+                    $mail->addAddress($id, $id);
 
-                    if (isset($post_data['full_name'])) {
-                        $user = $post_data['full_name'];
+                    if ($form->has('fields.name')) {
+                        $user = $form->get('fields.name');
                     } else {
-                        $user = $email;
+                        $user = $id;
                     }
 
                     $tags = [
@@ -570,8 +553,8 @@ class AccountsAdminController
                         '{user}'    => $user,
                     ];
 
-                    $subject = flextype('parsers')->shortcode()->process($new_user_email['subject']);
-                    $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($new_user_email['content']));
+                    $subject = flextype('parsers')->shortcode()->process($newUserEmail['subject']);
+                    $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($newUserEmail['content']));
 
                     // Content
                     $mail->isHTML(true);
@@ -726,8 +709,10 @@ class AccountsAdminController
                 $accounts_admin_config['supper_admin_registered'] = true;
                 Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('serializers')->yaml()->encode($accounts_admin_config));
 
-                // Clear cache after proccess
-                Filesystem::deleteDir(PATH['tmp']);
+                // Clean `var` directory before proccess
+                if (filesystem()->directory(PATH['tmp'])->exists()) {
+                    filesystem()->directory(PATH['tmp'])->clean();
+                }
 
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
             }
