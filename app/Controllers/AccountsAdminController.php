@@ -536,7 +536,7 @@ class AccountsAdminController
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $newUserEmail = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-user.md'));
+                    $newUserEmail = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/templates/emails/new-user.md'));
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
@@ -569,145 +569,130 @@ class AccountsAdminController
                 }
 
                 // Update default entry
-                flextype('entries')->update('home', ['created_by' => $uuid, 'published_by' => $uuid, 'published_at' => $time, 'created_at' => $time]);
+                flextype('entries')->update('home', ['created_by' => flextype('accounts')->storage()->get('create.data.uuid'), 
+                                                     'published_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                                                     'published_at' => flextype('accounts')->storage()->get('create.data.registered_at'), 
+                                                     'created_at' => flextype('accounts')->storage()->get('create.data.registered_at')]);
 
                 // Create default entries delivery token
-                $api_delivery_entries_token = bin2hex(random_bytes(16));
-                $api_delivery_entries_token_dir_path  = PATH['project'] . '/tokens/entries/' . $api_delivery_entries_token;
-                $api_delivery_entries_token_file_path = $api_delivery_entries_token_dir_path . '/token.yaml';
+                $apiEntriesToken = bin2hex(random_bytes(16));
+                $apiEntriesTokenDirPath  = PATH['project'] . '/tokens/entries/' . $apiEntriesToken;
+                $apiEntriesTokenFilePath = $apiEntriesTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($api_delivery_entries_token_dir_path)) Filesystem::createDir($api_delivery_entries_token_dir_path);
+                if (! Filesystem::has($apiEntriesTokenDirPath)) Filesystem::createDir($apiEntriesTokenDirPath);
 
                 Filesystem::write(
-                    $api_delivery_entries_token_file_path,
+                    $apiEntriesTokenFilePath,
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
-                        'icon' => 'fas fa-database',
+                        'icon' => [
+                            'icon' => 'newspaper',
+                            'set' => 'bootstrap',
+                        ],
                         'limit_calls' => (int) 0,
                         'calls' => (int) 0,
                         'state' => 'enabled',
-                        'uuid' => $uuid,
-                        'created_by' => $uuid,
-                        'created_at' => $time,
-                        'updated_by' => $uuid,
-                        'updated_at' => $time,
+                        'uuid' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
+                        'updated_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'updated_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
                     ])
                 );
 
                 // Create default images token
-                $api_images_token = bin2hex(random_bytes(16));
-                $api_images_token_dir_path  = PATH['project'] . '/tokens/images/' . $api_images_token;
-                $api_images_token_file_path = $api_images_token_dir_path . '/token.yaml';
+                $apiImagesToken = bin2hex(random_bytes(16));
+                $apiImagesTokenDirPath  = PATH['project'] . '/tokens/images/' . $apiImagesToken;
+                $apiImagesTokenFilePath = $apiImagesTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($api_images_token_dir_path)) Filesystem::createDir($api_images_token_dir_path);
+                if (! Filesystem::has($apiImagesTokenDirPath)) Filesystem::createDir($apiImagesTokenDirPath);
 
                 Filesystem::write(
-                    $api_images_token_file_path,
+                    $apiImagesTokenFilePath,
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
-                        'icon' => 'far fa-images',
+                        'icon' => [
+                            'icon' => 'images',
+                            'set' => 'bootstrap',
+                        ],
                         'limit_calls' => (int) 0,
                         'calls' => (int) 0,
                         'state' => 'enabled',
-                        'uuid' => $uuid,
-                        'created_by' => $uuid,
-                        'created_at' => $time,
-                        'updated_by' => $uuid,
-                        'updated_at' => $time,
+                        'uuid' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
+                        'updated_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'updated_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
                     ])
                 );
 
                 // Create default registry delivery token
-                $api_delivery_registry_token = bin2hex(random_bytes(16));
-                $api_delivery_registry_token_dir_path  = PATH['project'] . '/tokens/registry/' . $api_delivery_registry_token;
-                $api_delivery_registry_token_file_path = $api_delivery_registry_token_dir_path . '/token.yaml';
+                $apiRegistryToken = bin2hex(random_bytes(16));
+                $apiRegistryTokenDirPath  = PATH['project'] . '/tokens/registry/' . $apiRegistryToken;
+                $apiRegistryTokenFilePath = $apiRegistryTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($api_delivery_registry_token_dir_path)) Filesystem::createDir($api_delivery_registry_token_dir_path);
+                if (! Filesystem::has($apiRegistryTokenDirPath)) Filesystem::createDir($apiRegistryTokenDirPath);
 
                 Filesystem::write(
-                    $api_delivery_registry_token_file_path,
+                    $apiRegistryTokenFilePath,
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
-                        'icon' => 'fas fa-archive',
+                        'icon' => [
+                            'icon' => 'archive',
+                            'set' => 'bootstrap',
+                        ],
                         'limit_calls' => (int) 0,
                         'calls' => (int) 0,
                         'state' => 'enabled',
-                        'uuid' => $uuid,
-                        'created_by' => $uuid,
-                        'created_at' => $time,
-                        'updated_by' => $uuid,
-                        'updated_at' => $time,
+                        'uuid' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
+                        'updated_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'updated_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
                     ])
                 );
 
                 // Create default media files delivery token
-                $api_delivery_media_files_token = bin2hex(random_bytes(16));
-                $api_delivery_media_files_token_dir_path  = PATH['project'] . '/tokens/media/files/' . $api_delivery_media_files_token;
-                $api_delivery_media_files_token_file_path = $api_delivery_media_files_token_dir_path . '/token.yaml';
+                $apiMediaToken = bin2hex(random_bytes(16));
+                $apiMediaTokenDirPath  = PATH['project'] . '/tokens/media/' . $apiMediaToken;
+                $apiMediaTokenFilePath = $apiMediaTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($api_delivery_media_files_token_dir_path)) Filesystem::createDir($api_delivery_media_files_token_dir_path);
+                if (! Filesystem::has($apiMediaTokenDirPath)) Filesystem::createDir($apiMediaTokenDirPath);
 
                 Filesystem::write(
-                    $api_delivery_media_files_token_file_path,
+                    $apiMediaTokenPath,
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
-                        'icon' => 'fas fa-archive',
+                        'icon' => [
+                            'icon' => 'archive',
+                            'set' => 'bootstrap',
+                        ],
                         'limit_calls' => (int) 0,
                         'calls' => (int) 0,
                         'state' => 'enabled',
-                        'uuid' => $uuid,
-                        'created_by' => $uuid,
-                        'created_at' => $time,
-                        'updated_by' => $uuid,
-                        'updated_at' => $time,
-                    ])
-                );
-
-                // Create default media folders delivery token
-                $api_delivery_media_folders_token = bin2hex(random_bytes(16));
-                $api_delivery_media_folders_token_dir_path  = PATH['project'] . '/tokens/media/folders/' . $api_delivery_media_folders_token;
-                $api_delivery_media_folders_token_file_path = $api_delivery_media_folders_token_dir_path . '/token.yaml';
-
-                if (! Filesystem::has($api_delivery_media_folders_token_dir_path)) Filesystem::createDir($api_delivery_media_folders_token_dir_path);
-
-                Filesystem::write(
-                    $api_delivery_media_folders_token_file_path,
-                    flextype('serializers')->yaml()->encode([
-                        'title' => 'Default',
-                        'icon' => 'fas fa-archive',
-                        'limit_calls' => (int) 0,
-                        'calls' => (int) 0,
-                        'state' => 'enabled',
-                        'uuid' => $uuid,
-                        'created_by' => $uuid,
-                        'created_at' => $time,
-                        'updated_by' => $uuid,
-                        'updated_at' => $time,
+                        'uuid' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'created_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
+                        'updated_by' => flextype('accounts')->storage()->get('create.data.uuid'),
+                        'updated_at' => flextype('accounts')->storage()->get('create.data.registered_at'),
                     ])
                 );
 
                 // Set Default API's tokens
-                $custom_flextype_settings_file_path = PATH['project'] . '/config/flextype/settings.yaml';
-                $custom_flextype_settings_file_data = flextype('serializers')->yaml()->decode(Filesystem::read($custom_flextype_settings_file_path));
+                $customFlextypeSettingsFilePath = PATH['project'] . '/config/flextype/settings.yaml';
+                $customFlextypeSettingsFileData = flextype('serializers')->yaml()->decode(Filesystem::read($customFlextypeSettingsFilePath));
 
-                $custom_flextype_settings_file_data['api']['images']['default_token']   = $api_images_token;
-                $custom_flextype_settings_file_data['api']['entries']['default_token']  = $api_delivery_entries_token;
-                $custom_flextype_settings_file_data['api']['registry']['default_token'] = $api_delivery_registry_token;
-                $custom_flextype_settings_file_data['api']['media']['files']['default_token'] = $api_delivery_media_files_token;
-                $custom_flextype_settings_file_data['api']['media']['folders']['default_token'] = $api_delivery_media_folders_token;
+                $customFlextypeSettingsFileData['api']['images']['default_token']   = $apiImagesToken;
+                $customFlextypeSettingsFileData['api']['entries']['default_token']  = $apiEntriesToken;
+                $customFlextypeSettingsFileData['api']['registry']['default_token'] = $apiRegistryToken;
+                $customFlextypeSettingsFileData['api']['media']['default_token']    = $apiMediaToken;
 
-
-                Filesystem::write($custom_flextype_settings_file_path, flextype('serializers')->yaml()->encode($custom_flextype_settings_file_data));
-
-                // Create uploads dir for default entries
-                if (! Filesystem::has(PATH['project'] . '/media/entries/home/')) {
-                    Filesystem::createDir(PATH['project'] . '/media/entries/home/');
-                }
+                Filesystem::write($customFlextypeSettingsFilePath, flextype('serializers')->yaml()->encode($customFlextypeSettingsFileData));
 
                 // Set super admin regisered = true
-                $accounts_admin_config = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
-                $accounts_admin_config['supper_admin_registered'] = true;
-                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('serializers')->yaml()->encode($accounts_admin_config));
+                $accountsAdminConfig = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
+                $accountsAdminConfig['supper_admin_registered'] = true;
+                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('serializers')->yaml()->encode($accountsAdminConfig));
 
                 // Clean `var` directory before proccess
                 if (filesystem()->directory(PATH['tmp'])->exists()) {
