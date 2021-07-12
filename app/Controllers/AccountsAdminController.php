@@ -234,20 +234,20 @@ class AccountsAdminController
      */
     public function loginProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get Data from POST
-        $post_data = $request->getParsedBody();
+        // Get data from POST
+        $data = $request->getParsedBody();
 
-        // Get email
-        $id = $post_data['email'];
+        // Process form
+        $form = flextype('blueprints')->form($data)->process();
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $id . '/profile.yaml')) {
-            $user_file = flextype('serializers')->yaml()->decode(Filesystem::read($_user_file), false);
+        if (flextype('accounts')->has($form->get('fields.id'))) {
+            $userAcccount = flextype('accounts')->fetch($form->get('fields.id'));
 
-            if (password_verify(trim($post_data['password']), $user_file['hashed_password'])) {
+            if (password_verify(trim($form->get('fields.password')), $userAcccount['hashed_password'])) {
 
-                flextype('acl')->setUserLoggedInEmail($id);
-                flextype('acl')->setUserLoggedInRoles($user_file['roles']);
-                flextype('acl')->setUserLoggedInUuid($user_file['uuid']);
+                flextype('acl')->setUserLoggedInEmail($form->get('fields.id'));
+                flextype('acl')->setUserLoggedInRoles($userAcccount['roles']);
+                flextype('acl')->setUserLoggedInUuid($userAcccount['uuid']);
                 flextype('acl')->setUserLoggedIn(true);
 
 
