@@ -13,7 +13,7 @@ flextype()->group('/' . $admin_route . '/accounts', function () {
     flextype()->post('/login', AccountsAdminController::class . ':loginProcess')->setName('admin.accounts.loginProcess');
     flextype()->get('/reset-password', AccountsAdminController::class . ':resetPassword')->setName('admin.accounts.resetPassword');
     flextype()->post('/reset-password', AccountsAdminController::class . ':resetPasswordProcess')->setName('admin.accounts.resetPasswordProcess');
-    flextype()->get('/new-password/{email}/{hash}', AccountsAdminController::class . ':newPasswordProcess')->setName('admin.accounts.newPasswordProcess');
+    flextype()->get('/new-password/{id}/{hash}', AccountsAdminController::class . ':newPasswordProcess')->setName('admin.accounts.newPasswordProcess');
     flextype()->get('/registration', AccountsAdminController::class . ':registration')->setName('admin.accounts.registration');
     flextype()->post('/registration', AccountsAdminController::class . ':registrationProcess')->setName('admin.accounts.registrationProcess');
 })->add(new CsrfMiddleware());
