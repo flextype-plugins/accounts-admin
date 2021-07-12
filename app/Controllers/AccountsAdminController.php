@@ -536,7 +536,7 @@ class AccountsAdminController
                     // Instantiation and passing `true` enables exceptions
                     $mail = new PHPMailer(true);
 
-                    $newUserEmail = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/templates/emails/new-user.md'));
+                    $newUserEmail = flextype('serializers')->frontmatter()->decode(filesystem()->file(PATH['project'] . '/plugins/accounts-admin/templates/emails/new-user.md')->get());
 
                     //Recipients
                     $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
@@ -579,10 +579,9 @@ class AccountsAdminController
                 $apiEntriesTokenDirPath  = PATH['project'] . '/tokens/entries/' . $apiEntriesToken;
                 $apiEntriesTokenFilePath = $apiEntriesTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($apiEntriesTokenDirPath)) Filesystem::createDir($apiEntriesTokenDirPath);
+                if (! filesystem()->directory($apiEntriesTokenDirPath)->exists()) filesystem()->directory($apiEntriesTokenDirPath)->create(0755, true);
 
-                Filesystem::write(
-                    $apiEntriesTokenFilePath,
+                filesystem()->file($apiEntriesTokenFilePath)->put(
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => [
@@ -605,10 +604,9 @@ class AccountsAdminController
                 $apiImagesTokenDirPath  = PATH['project'] . '/tokens/images/' . $apiImagesToken;
                 $apiImagesTokenFilePath = $apiImagesTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($apiImagesTokenDirPath)) Filesystem::createDir($apiImagesTokenDirPath);
+                if (! filesystem()->directory($apiImagesTokenDirPath)->exists()) filesystem()->directory($apiImagesTokenDirPath)->create(0755, true);
 
-                Filesystem::write(
-                    $apiImagesTokenFilePath,
+                filesystem()->file($apiImagesTokenFilePath)->put(
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => [
@@ -631,10 +629,9 @@ class AccountsAdminController
                 $apiRegistryTokenDirPath  = PATH['project'] . '/tokens/registry/' . $apiRegistryToken;
                 $apiRegistryTokenFilePath = $apiRegistryTokenDirPath . '/token.yaml';
 
-                if (! Filesystem::has($apiRegistryTokenDirPath)) Filesystem::createDir($apiRegistryTokenDirPath);
+                if (! filesystem()->directory($apiRegistryTokenDirPath)->exists()) filesystem()->directory($apiRegistryTokenDirPath)->create(0755, true);
 
-                Filesystem::write(
-                    $apiRegistryTokenFilePath,
+                filesystem()->file($apiRegistryTokenFilePath)->put(
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => [
@@ -659,8 +656,7 @@ class AccountsAdminController
 
                 if (! Filesystem::has($apiMediaTokenDirPath)) Filesystem::createDir($apiMediaTokenDirPath);
 
-                Filesystem::write(
-                    $apiMediaTokenPath,
+                filesystem()->file($apiMediaTokenFilePath)->put(
                     flextype('serializers')->yaml()->encode([
                         'title' => 'Default',
                         'icon' => [
@@ -680,19 +676,19 @@ class AccountsAdminController
 
                 // Set Default API's tokens
                 $customFlextypeSettingsFilePath = PATH['project'] . '/config/flextype/settings.yaml';
-                $customFlextypeSettingsFileData = flextype('serializers')->yaml()->decode(Filesystem::read($customFlextypeSettingsFilePath));
+                $customFlextypeSettingsFileData = flextype('serializers')->yaml()->decode(filesystem()->file($customFlextypeSettingsFilePath)->get());
 
                 $customFlextypeSettingsFileData['api']['images']['default_token']   = $apiImagesToken;
                 $customFlextypeSettingsFileData['api']['entries']['default_token']  = $apiEntriesToken;
                 $customFlextypeSettingsFileData['api']['registry']['default_token'] = $apiRegistryToken;
                 $customFlextypeSettingsFileData['api']['media']['default_token']    = $apiMediaToken;
 
-                Filesystem::write($customFlextypeSettingsFilePath, flextype('serializers')->yaml()->encode($customFlextypeSettingsFileData));
+                filesystem()->file($customFlextypeSettingsFilePath)->put(flextype('serializers')->yaml()->encode($customFlextypeSettingsFileData));
 
                 // Set super admin regisered = true
-                $accountsAdminConfig = flextype('serializers')->yaml()->decode(Filesystem::read(PATH['project'] . '/plugins/accounts-admin/settings.yaml'));
+                $accountsAdminConfig = flextype('serializers')->yaml()->decode(filesystem()->file(PATH['project'] . '/plugins/accounts-admin/settings.yaml')->get());
                 $accountsAdminConfig['supper_admin_registered'] = true;
-                Filesystem::write(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml', flextype('serializers')->yaml()->encode($accountsAdminConfig));
+                filesystem()->file(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml')->put(flextype('serializers')->yaml()->encode($accountsAdminConfig));
 
                 // Clean `var` directory before proccess
                 if (filesystem()->directory(PATH['tmp'])->exists()) {
