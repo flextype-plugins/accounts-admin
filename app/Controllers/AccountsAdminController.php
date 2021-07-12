@@ -462,15 +462,20 @@ class AccountsAdminController
 
                 }
 
+                flextype('flash')->addMessage('success', __('accounts_admin_message_reset_password_details_was_sended'));
+
                 // Run event onAccountsAdminNewPasswordReset
                 flextype('emitter')->emit('onAccountsAdminNewPasswordReset');
-                
                 
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
             }
 
+            flextype('flash')->addMessage('error', __('accounts_admin_message_reset_password_details_was_not_sended'));
+
             return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
         }
+
+        flextype('flash')->addMessage('error', __('accounts_admin_message_reset_password_details_was_not_sended'));
 
         return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
     }
