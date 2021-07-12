@@ -390,6 +390,8 @@ class AccountsAdminController
             return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
         }
 
+        flextype('flash')->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
+
         return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
     }
 
