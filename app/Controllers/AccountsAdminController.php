@@ -246,8 +246,8 @@ class AccountsAdminController
             if (password_verify(trim($form->get('fields.password')), $userAcccount['hashed_password'])) {
 
                 flextype('acl')->setUserLoggedInEmail($form->get('fields.id'));
-                flextype('acl')->setUserLoggedInRoles($userAcccount['roles']);
-                flextype('acl')->setUserLoggedInUuid($userAcccount['uuid']);
+                flextype('acl')->setUserLoggedInRoles($userAcccount['roles'] ?? '');
+                flextype('acl')->setUserLoggedInUuid($userAcccount['uuid'] ?? '');
                 flextype('acl')->setUserLoggedIn(true);
 
 
@@ -299,7 +299,7 @@ class AccountsAdminController
     {
         return flextype('twig')->render($response, 'plugins/accounts-admin/templates/reset-password.html');
     }
-
+    
     /**
      * New passoword process
      *
