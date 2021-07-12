@@ -1,0 +1,16 @@
+{% extends "plugins/accounts-admin/templates/partials/base.html" %}
+
+{% block content %}
+<div class="mt-5 text-center">
+    <h3 class="mb-3">{{ __('accounts_admin_you_have_no_access') }}</h3>
+    <p>
+        <a title="{{ __('admin_logout') }}"
+        href="javascript:;"
+        class="btn btn-primary"
+        onclick="event.preventDefault(); document.getElementById('logoutProcess').submit();">{{ __('admin_logout') }} {{ icon('box-arrow-right', 'bootstrap') }}</a>
+        <form id="logoutProcess" action="{{ urlFor('admin.accounts.logoutProcess') }}" method="POST" style="display: none;">
+        {{ csrf() }}
+        </form>
+    </p>
+</div>
+{% endblock %}
