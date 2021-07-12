@@ -8,7 +8,7 @@ use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
 use Flextype\Plugin\AccountsAdmin\Controllers\AccountsAdminController;
 
 flextype()->group('/' . $admin_route . '/accounts', function () {
-    flextype()->get('/no-access', function() { return 'no-access'; })->setName('admin.accounts.no-access');
+    flextype()->get('/no-access', AccountsAdminController::class . ':noAccess')->setName('admin.accounts.no-access');
     flextype()->get('/login', AccountsAdminController::class . ':login')->setName('admin.accounts.login');
     flextype()->post('/login', AccountsAdminController::class . ':loginProcess')->setName('admin.accounts.loginProcess');
     flextype()->get('/reset-password', AccountsAdminController::class . ':resetPassword')->setName('admin.accounts.resetPassword');
@@ -19,13 +19,17 @@ flextype()->group('/' . $admin_route . '/accounts', function () {
 })->add(new CsrfMiddleware());
 
 flextype()->group('/' . $admin_route . '/accounts', function () {
+    flextype()->post('/logout', AccountsAdminController::class . ':logoutProcess')->setName('admin.accounts.logoutProcess');
+})->add(new AclIsUserLoggedInMiddleware(['redirect' => 'admin.accounts.login']))
+  ->add(new CsrfMiddleware());
+  
+flextype()->group('/' . $admin_route . '/accounts', function () {
     flextype()->get('', AccountsAdminController::class . ':index')->setName('admin.accounts.index');
     flextype()->get('/add', AccountsAdminController::class . ':add')->setName('admin.accounts.add');
     flextype()->post('/add', AccountsAdminController::class . ':addProcess')->setName('admin.accounts.addProcess');
     flextype()->get('/edit', AccountsAdminController::class . ':edit')->setName('admin.accounts.edit');
     flextype()->post('/edit', AccountsAdminController::class . ':editProcess')->setName('admin.accounts.editProcess');
     flextype()->post('/delete', AccountsAdminController::class . ':deleteProcess')->setName('admin.accounts.deleteProcess');
-    flextype()->post('/logout', AccountsAdminController::class . ':logoutProcess')->setName('admin.accounts.logoutProcess');
 })->add(new AclIsUserLoggedInMiddleware(['redirect' => 'admin.accounts.login']))
   ->add(new AclIsUserLoggedInRolesInMiddleware(['redirect' => (flextype()->getContainer()->acl->isUserLoggedIn() ? 'admin.accounts.no-access' : 'admin.accounts.login'),
                                                 'roles' => 'admin']))
