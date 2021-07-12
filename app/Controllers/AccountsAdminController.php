@@ -375,7 +375,7 @@ class AccountsAdminController
                     }
 
                     flextype('flash')->addMessage('success', __('accounts_admin_message_new_password_was_sended'));
-dd($mail->Body);
+
                     // Run event onAccountsAdminNewPasswordReset
                     flextype('emitter')->emit('onAccountsAdminNewPasswordReset');
 
