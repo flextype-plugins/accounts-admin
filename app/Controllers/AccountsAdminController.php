@@ -309,43 +309,35 @@ class AccountsAdminController
      */
     public function newPasswordProcess(Request $request, Response $response, array $args) : Response
     {
-        // Get email
-        $id = $args['email'];
+        if (flextype('accounts')->has($args['id'])) {
+            
+            $userAccount = flextype('accounts')->fetch($args['id']);
 
-        if (Filesystem::has($_user_file = PATH['project'] . '/accounts/' . $id . '/profile.yaml')) {
-            $user_file_body = Filesystem::read($_user_file);
-            $user_file_data = flextype('serializers')->yaml()->decode($user_file_body);
-
-            if (is_null($user_file_data['hashed_password_reset'])) {
+            if (is_null($userAccount['hashed_password_reset'])) {
                 flextype('flash')->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
             }
 
-            if (password_verify(trim($args['hash']), $user_file_data['hashed_password_reset'])) {
+            if (password_verify(trim($args['hash']), $userAccount['hashed_password_reset'])) {
 
                 // Generate new passoword
-                $raw_password    = bin2hex(random_bytes(16));
-                $hashed_password = password_hash($raw_password, PASSWORD_BCRYPT);
+                $rawPassword    = bin2hex(random_bytes(16));
+                $hashedPassword = password_hash($rawPassword, PASSWORD_BCRYPT);
 
-                $user_file_data['hashed_password'] = $hashed_password;
+                $userAccount->delete('hashed_password_reset');
+                $userAccount->set('hashed_password', $hashedPassword);
 
-                Arrays::delete($user_file_data, 'hashed_password_reset');
-
-                if (Filesystem::write(
-                    PATH['project'] . '/accounts/' . $id . '/profile.yaml',
-                    flextype('serializers')->yaml()->encode($user_file_data)
-                )) {
-
+                if (flextype('accounts')->update($args['id'], $userAccount->toArray())) {
                     try {
 
                         // Instantiation and passing `true` enables exceptions
                         $mail = new PHPMailer(true);
 
-                        $new_password_email = flextype('serializers')->frontmatter()->decode(Filesystem::read(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md'));
+                        $newPasswordEmail = flextype('serializers')->frontmatter()->decode(filesystem()->file(PATH['project'] . '/' . 'plugins/accounts-admin/templates/emails/new-password.md')->get());
 
-                        //Recipients
+                        // Recipients
                         $mail->setFrom(flextype('registry')->get('plugins.accounts-admin.settings.from.email'), flextype('registry')->get('plugins.accounts-admin.settings.from.name'));
-                        $mail->addAddress($id, $id);
+                        $mail->addAddress($args['id'], $args['id']);
 
                         if (flextype('registry')->has('flextype.settings.url') && flextype('registry')->get('flextype.settings.url') !== '') {
                             $url = flextype('registry')->get('flextype.settings.url');
@@ -353,22 +345,22 @@ class AccountsAdminController
                             $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
                         }
 
-                        if (isset($user_file_data['full_name'])) {
-                            $user = $user_file_data['full_name'];
+                        if (isset($userAccount['name'])) {
+                            $user = $userAccount['name'];
                         } else {
-                            $user = $id;
+                            $user = $args['id'];
                         }
 
                         $tags = [
                             '{sitename}' => flextype('registry')->get('plugins.accounts-admin.settings.from.name'),
-                            '{email}' => $id,
+                            '{email}' => $args['id'],
                             '{user}' => $user,
-                            '{password}' => $raw_password,
+                            '{password}' => $rawPassword,
                             '{url}' => $url,
                         ];
 
-                        $subject = flextype('parsers')->shortcode()->process($new_password_email['subject']);
-                        $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($new_password_email['content']));
+                        $subject = flextype('parsers')->shortcode()->process($newPasswordEmail['subject']);
+                        $content = flextype('parsers')->markdown()->parse(flextype('parsers')->shortcode()->process($newPasswordEmail['content']));
 
                         // Content
                         $mail->isHTML(true);
@@ -383,7 +375,7 @@ class AccountsAdminController
                     }
 
                     flextype('flash')->addMessage('success', __('accounts_admin_message_new_password_was_sended'));
-
+dd($mail->Body);
                     // Run event onAccountsAdminNewPasswordReset
                     flextype('emitter')->emit('onAccountsAdminNewPasswordReset');
 
@@ -399,7 +391,6 @@ class AccountsAdminController
         }
 
         return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
-
     }
 
     /**
@@ -473,7 +464,8 @@ class AccountsAdminController
 
                 // Run event onAccountsAdminNewPasswordReset
                 flextype('emitter')->emit('onAccountsAdminNewPasswordReset');
-
+                
+                
                 return $response->withRedirect(flextype('router')->pathFor('admin.accounts.login'));
             }
 
