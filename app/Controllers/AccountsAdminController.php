@@ -299,7 +299,19 @@ class AccountsAdminController
     {
         return flextype('twig')->render($response, 'plugins/accounts-admin/templates/reset-password.html');
     }
-    
+
+    /**
+     * No Access page
+     *
+     * @param Request  $request  PSR7 request
+     * @param Response $response PSR7 response
+     * @param array    $args     Args
+     */
+    public function noAccess(Request $request, Response $response, array $args) : Response
+    {
+        return flextype('twig')->render($response, 'plugins/accounts-admin/templates/no-access.html');
+    }
+
     /**
      * New passoword process
      *
