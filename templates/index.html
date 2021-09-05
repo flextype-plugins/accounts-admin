@@ -2,7 +2,7 @@
 
 {% block content %}
     {% if (accountsList | length > 0) %}
-    {{ flextype.blueprints.render('accounts-admin', {}, {'query': query}) }}
+    {{ blueprints().render('accounts-admin', {}, {'query': query}) }}
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -48,7 +48,7 @@
                                                     <span class="pe-3 d-flex">{{ icon('pencil', 'bootstrap') }}</span> {{ __('admin_edit') }}
                                                 </a>
                                             </li>
-                                            {% if flextype.acl.getUserLoggedInEmail() != account.id %}
+                                            {% if acl().getUserLoggedInEmail() != account.id %}
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
