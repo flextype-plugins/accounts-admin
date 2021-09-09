@@ -63,9 +63,8 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function loginProcess(Request $request, Response $response, array $args) : Response
+    public function loginProcess(Request $request, Response $response) : Response
     {
         // Get data from POST
         $data = $request->getParsedBody();
@@ -106,7 +105,6 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
     public function registration(Request $request, Response $response) : Response
     {
@@ -126,9 +124,8 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function resetPassword(Request $request, Response $response, array $args) : Response
+    public function resetPassword(Request $request, Response $response) : Response
     {
         return twig()->render($response, 'plugins/accounts-admin/templates/reset-password.html');
     }
@@ -138,9 +135,8 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function noAccess(Request $request, Response $response, array $args) : Response
+    public function noAccess(Request $request, Response $response) : Response
     {
         return twig()->render($response, 'plugins/accounts-admin/templates/no-access.html');
     }
@@ -150,20 +146,19 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function newPasswordProcess(Request $request, Response $response, array $args) : Response
+    public function newPasswordProcess($id, $hash, Request $request, Response $response) : Response
     {
-        if (entries()->has($args['id'])) {
+        if (entries()->has('accounts/' . $id)) {
             
-            $userAccount = entries()->fetch($args['id']);
+            $userAccount = entries()->fetch('accounts/' . $id);
 
             if (is_null($userAccount['hashed_password_reset'])) {
                 flash()->addMessage('error', __('accounts_admin_message_hashed_password_reset_not_valid'));
                 return redirect('admin.accounts.login');
             }
 
-            if (password_verify(trim($args['hash']), $userAccount['hashed_password_reset'])) {
+            if (password_verify(trim($hash), $userAccount['hashed_password_reset'])) {
 
                 // Generate new passoword
                 $rawPassword    = bin2hex(random_bytes(16));
@@ -172,7 +167,7 @@ class AccountsAdminController
                 $userAccount->delete('hashed_password_reset');
                 $userAccount->set('hashed_password', $hashedPassword);
 
-                if (entries()->update($args['id'], $userAccount->toArray())) {
+                if (entries()->update('accounts/' . $id, $userAccount->toArray())) {
                     try {
 
                         // Instantiation and passing `true` enables exceptions
@@ -182,7 +177,7 @@ class AccountsAdminController
 
                         // Recipients
                         $mail->setFrom(registry()->get('plugins.accounts-admin.settings.from.email'), registry()->get('plugins.accounts-admin.settings.from.name'));
-                        $mail->addAddress($args['id'], $args['id']);
+                        $mail->addAddress($id, $id);
 
                         if (registry()->has('flextype.settings.url') && registry()->get('flextype.settings.url') !== '') {
                             $url = registry()->get('flextype.settings.url');
@@ -193,19 +188,19 @@ class AccountsAdminController
                         if (isset($userAccount['name'])) {
                             $user = $userAccount['name'];
                         } else {
-                            $user = $args['id'];
+                            $user = $id;
                         }
 
                         $tags = [
                             '{sitename}' => registry()->get('plugins.accounts-admin.settings.from.name'),
-                            '{email}' => $args['id'],
+                            '{email}' => $id,
                             '{user}' => $user,
                             '{password}' => $rawPassword,
                             '{url}' => $url,
                         ];
 
-                        $subject = parsers()->shortcodes()->process($newPasswordEmail['subject']);
-                        $content = parsers()->markdown()->parse(parsers()->shortcodes()->process($newPasswordEmail['content']));
+                        $subject = parsers()->shortcodes()->parse($newPasswordEmail['subject']);
+                        $content = parsers()->markdown()->parse(parsers()->shortcodes()->parse($newPasswordEmail['content']));
 
                         // Content
                         $mail->isHTML(true);
@@ -245,9 +240,8 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function resetPasswordProcess(Request $request, Response $response, array $args) : Response
+    public function resetPasswordProcess(Request $request, Response $response) : Response
     {
         // Get data from POST
         $data = $request->getParsedBody();
@@ -290,8 +284,8 @@ class AccountsAdminController
                         '{new_hash}' => $rawHash,
                     ];
 
-                    $subject = parsers()->shortcodes()->process($reset_password_email['subject']);
-                    $content = parsers()->markdown()->parse(parsers()->shortcodes()->process($reset_password_email['content']));
+                    $subject = parsers()->shortcodes()->parse($reset_password_email['subject']);
+                    $content = parsers()->markdown()->parse(parsers()->shortcodes()->parse($reset_password_email['content']));
 
                     // Content
                     $mail->isHTML(true);
@@ -328,9 +322,8 @@ class AccountsAdminController
      *
      * @param Request  $request  PSR7 request
      * @param Response $response PSR7 response
-     * @param array    $args     Args
      */
-    public function registrationProcess(Request $request, Response $response, array $args) : Response
+    public function registrationProcess(Request $request, Response $response) : Response
     {
         if ($this->isSuperAdminExists()) {
             return redirect('admin.accounts.login');
@@ -359,7 +352,7 @@ class AccountsAdminController
 
             // Create admin account
    
-            if (entries()->create($id, $form->get('fields'))) {
+            if (entries()->create('accounts/' . $id, $form->get('fields'))) {
                 try {
 
                     // Instantiation and passing `true` enables exceptions
@@ -382,8 +375,8 @@ class AccountsAdminController
                         '{user}'    => $user,
                     ];
 
-                    $subject = parsers()->shortcodes()->process($newUserEmail['subject']);
-                    $content = parsers()->markdown()->parse(parsers()->shortcodes()->process($newUserEmail['content']));
+                    $subject = parsers()->shortcodes()->parse($newUserEmail['subject']);
+                    $content = parsers()->markdown()->parse(parsers()->shortcodes()->parse($newUserEmail['content']));
 
                     // Content
                     $mail->isHTML(true);
