@@ -6,40 +6,31 @@
 
 Accounts Admin Plugin to manage users accounts in Flextype Admin Panel.
 
-## DEPENDENCIES
+### Dependencies
 
 The following dependencies need to be installed for Accounts Admin Plugin.
 
 | Item | Version | Download |
 |---|---|---|
-| [flextype](https://github.com/flextype/flextype) | 0.9.16 | [download](https://github.com/flextype/flextype/releases) |
+| [flextype](https://github.com/flextype/flextype) | 0.9.17 | [download](https://github.com/flextype/flextype/releases) |
 | [twig](https://github.com/flextype-plugins/twig) | >=2.0.0 | [download](https://github.com/flextype-plugins/twig/releases) |
-| [form](https://github.com/flextype-plugins/blueprints) | >=1.0.0 | [download](https://github.com/flextype-plugins/blueprints/releases) |
-| [form-admin](https://github.com/flextype-plugins/blueprints-admin) | >=1.0.0 | [download](https://github.com/flextype-plugins/blueprints-admin/releases) |
+| [blueprints](https://github.com/flextype-plugins/blueprints) | >=1.0.0 | [download](https://github.com/flextype-plugins/blueprints/releases) |
 | [admin](https://github.com/flextype-plugins/admin) | >=1.0.0 | [download](https://github.com/flextype-plugins/admin/releases) |
-| [jquery](https://github.com/flextype-plugins/jquery) | >=1.0.0 | [download](https://github.com/flextype-plugins/jquery/releases) |
+| [accounts](https://github.com/flextype-plugins/accounts) | >=1.0.0 | [download](https://github.com/flextype-plugins/accounts/releases) |
 | [acl](https://github.com/flextype-plugins/acl) | >=1.0.0 | [download](https://github.com/flextype-plugins/acl/releases) |
 | [phpmailer](https://github.com/flextype-plugins/phpmailer) | >=1.0.0 | [download](https://github.com/flextype-plugins/phpmailer/releases) |
 
-## INSTALLATION
+### Installation
 
 1. Download & Install all required dependencies.
 2. Create new folder `/project/plugins/accounts-admin`
 3. Download Accounts Admin Plugin and unzip plugin content to the folder `/project/plugins/accounts-admin`
-4. Copy all fieldsets from `/project/plugins/accounts-admin/fieldsets` to `/project/fieldsets` folder.
+4. Copy all blueprints from `/project/plugins/accounts-admin/blueprints` to `/project/blueprints` folder.
 
-### Events
+### Resources
 
-| Event | Description |
-|---|---|
-| onAccountsAdminUserLoggedIn | Allows plugins to include their own logic when user logs in. |
-| onAccountsAdminNewPasswordSended | Allows plugins to include their own logic when new password was sended. |
-| onAccountsAdminPasswordReset | Allows plugins to include their own logic when password was reset. |
-| onAccountsAdminNewUserRegistered | Allows plugins to include their own logic when new was user registered. |
-| onAccountsAdminProfileEdited | Allows plugins to include their own logic when user profile edited. |
-| onAccountsAdminLogout | Allows plugins to include their own logic when user logs out. |
+* [Documentation](https://flextype.org/downloads/extend/plugins/accounts-admin)
 
-
-## LICENSE
+### License
 [The MIT License (MIT)](https://github.com/flextype-plugins/accounts-admin/blob/master/LICENSE.txt)
 Copyright (c) 2021 [Sergey Romanenko](https://github.com/Awilum)
