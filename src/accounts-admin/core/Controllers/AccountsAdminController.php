@@ -97,7 +97,6 @@ class AccountsAdminController
         flash()->addMessage('error', __('accounts_admin_message_wrong_email_password'));
 
         return redirect('admin.accounts.login');
-
     }
 
     /**
@@ -179,11 +178,7 @@ class AccountsAdminController
                         $mail->setFrom(registry()->get('plugins.accounts-admin.settings.from.email'), registry()->get('plugins.accounts-admin.settings.from.name'));
                         $mail->addAddress($id, $id);
 
-                        if (registry()->has('flextype.settings.url') && registry()->get('flextype.settings.url') !== '') {
-                            $url = registry()->get('flextype.settings.url');
-                        } else {
-                            $url = Uri::createFromEnvironment(new Environment($_SERVER))->getBaseUrl();
-                        }
+                        $url = getBaseUrl();
 
                         if (isset($userAccount['name'])) {
                             $user = $userAccount['name'];
@@ -391,128 +386,19 @@ class AccountsAdminController
                 }
 
                 // Update default entry
-                entries()->update('home', ['created_by' => entries()->registry()->get('create.data.uuid'), 
-                                                     'published_by' => entries()->registry()->get('create.data.uuid'),
-                                                     'published_at' => entries()->registry()->get('create.data.registered_at'), 
-                                                     'created_at' => entries()->registry()->get('create.data.registered_at')]);
-
-                // Create default entries delivery token
-                $apiEntriesToken = bin2hex(random_bytes(16));
-                $apiEntriesTokenDirPath  = PATH['project'] . '/tokens/entries/' . $apiEntriesToken;
-                $apiEntriesTokenFilePath = $apiEntriesTokenDirPath . '/token.yaml';
-
-                if (! filesystem()->directory($apiEntriesTokenDirPath)->exists()) filesystem()->directory($apiEntriesTokenDirPath)->create(0755, true);
-
-                filesystem()->file($apiEntriesTokenFilePath)->put(
-                    serializers()->yaml()->encode([
-                        'title' => 'Default',
-                        'icon' => [
-                            'icon' => 'newspaper',
-                            'set' => 'bootstrap',
-                        ],
-                        'limit_calls' => (int) 0,
-                        'calls' => (int) 0,
-                        'state' => 'enabled',
-                        'uuid' => entries()->registry()->get('create.data.uuid'),
-                        'created_by' => entries()->registry()->get('create.data.uuid'),
-                        'created_at' => entries()->registry()->get('create.data.registered_at'),
-                        'updated_by' => entries()->registry()->get('create.data.uuid'),
-                        'updated_at' => entries()->registry()->get('create.data.registered_at'),
-                    ])
-                );
-
-                // Create default images token
-                $apiImagesToken = bin2hex(random_bytes(16));
-                $apiImagesTokenDirPath  = PATH['project'] . '/tokens/images/' . $apiImagesToken;
-                $apiImagesTokenFilePath = $apiImagesTokenDirPath . '/token.yaml';
-
-                if (! filesystem()->directory($apiImagesTokenDirPath)->exists()) filesystem()->directory($apiImagesTokenDirPath)->create(0755, true);
-
-                filesystem()->file($apiImagesTokenFilePath)->put(
-                    serializers()->yaml()->encode([
-                        'title' => 'Default',
-                        'icon' => [
-                            'icon' => 'images',
-                            'set' => 'bootstrap',
-                        ],
-                        'limit_calls' => (int) 0,
-                        'calls' => (int) 0,
-                        'state' => 'enabled',
-                        'uuid' => entries()->registry()->get('create.data.uuid'),
-                        'created_by' => entries()->registry()->get('create.data.uuid'),
-                        'created_at' => entries()->registry()->get('create.data.registered_at'),
-                        'updated_by' => entries()->registry()->get('create.data.uuid'),
-                        'updated_at' => entries()->registry()->get('create.data.registered_at'),
-                    ])
-                );
-
-                // Create default registry delivery token
-                $apiRegistryToken = bin2hex(random_bytes(16));
-                $apiRegistryTokenDirPath  = PATH['project'] . '/tokens/registry/' . $apiRegistryToken;
-                $apiRegistryTokenFilePath = $apiRegistryTokenDirPath . '/token.yaml';
-
-                if (! filesystem()->directory($apiRegistryTokenDirPath)->exists()) filesystem()->directory($apiRegistryTokenDirPath)->create(0755, true);
-
-                filesystem()->file($apiRegistryTokenFilePath)->put(
-                    serializers()->yaml()->encode([
-                        'title' => 'Default',
-                        'icon' => [
-                            'icon' => 'archive',
-                            'set' => 'bootstrap',
-                        ],
-                        'limit_calls' => (int) 0,
-                        'calls' => (int) 0,
-                        'state' => 'enabled',
-                        'uuid' => entries()->registry()->get('create.data.uuid'),
-                        'created_by' => entries()->registry()->get('create.data.uuid'),
-                        'created_at' => entries()->registry()->get('create.data.registered_at'),
-                        'updated_by' => entries()->registry()->get('create.data.uuid'),
-                        'updated_at' => entries()->registry()->get('create.data.registered_at'),
-                    ])
-                );
-
-                // Create default media files delivery token
-                $apiMediaToken = bin2hex(random_bytes(16));
-                $apiMediaTokenDirPath  = PATH['project'] . '/tokens/media/' . $apiMediaToken;
-                $apiMediaTokenFilePath = $apiMediaTokenDirPath . '/token.yaml';
-
-                if (! filesystem()->directory($apiMediaTokenDirPath)->exists()) filesystem()->directory($apiMediaTokenDirPath)->create(0755, true);
-
-                filesystem()->file($apiMediaTokenFilePath)->put(
-                    serializers()->yaml()->encode([
-                        'title' => 'Default',
-                        'icon' => [
-                            'icon' => 'archive',
-                            'set' => 'bootstrap',
-                        ],
-                        'limit_calls' => (int) 0,
-                        'calls' => (int) 0,
-                        'state' => 'enabled',
-                        'uuid' => entries()->registry()->get('create.data.uuid'),
-                        'created_by' => entries()->registry()->get('create.data.uuid'),
-                        'created_at' => entries()->registry()->get('create.data.registered_at'),
-                        'updated_by' => entries()->registry()->get('create.data.uuid'),
-                        'updated_at' => entries()->registry()->get('create.data.registered_at'),
-                    ])
-                );
-
-                // Set Default API's tokens
-                $customFlextypeSettingsFilePath = PATH['project'] . '/config/flextype/settings.yaml';
-                $customFlextypeSettingsFileData = serializers()->yaml()->decode(filesystem()->file($customFlextypeSettingsFilePath)->get());
-
-                $customFlextypeSettingsFileData['api']['images']['default_token']   = $apiImagesToken;
-                $customFlextypeSettingsFileData['api']['entries']['default_token']  = $apiEntriesToken;
-                $customFlextypeSettingsFileData['api']['registry']['default_token'] = $apiRegistryToken;
-                $customFlextypeSettingsFileData['api']['media']['default_token']    = $apiMediaToken;
-
-                filesystem()->file($customFlextypeSettingsFilePath)->put(serializers()->yaml()->encode($customFlextypeSettingsFileData));
+                if (entries()->has('home')) {
+                    entries()->update('home', ['created_by' => entries()->registry()->get('create.data.uuid'), 
+                                                        'published_by' => entries()->registry()->get('create.data.uuid'),
+                                                        'published_at' => entries()->registry()->get('create.data.registered_at'), 
+                                                        'created_at' => entries()->registry()->get('create.data.registered_at')]);
+                }
 
                 // Set super admin regisered = true
                 $accountsAdminConfig = serializers()->yaml()->decode(filesystem()->file(PATH['project'] . '/plugins/accounts-admin/settings.yaml')->get());
                 $accountsAdminConfig['supper_admin_registered'] = true;
                 filesystem()->file(PATH['project'] . '/config/plugins/accounts-admin/settings.yaml')->put(serializers()->yaml()->encode($accountsAdminConfig));
 
-                // Clean `var` directory before proccess
+                // Clean `tmp` directory
                 if (filesystem()->directory(PATH['tmp'])->exists()) {
                     filesystem()->directory(PATH['tmp'])->clean();
                 }
@@ -542,7 +428,12 @@ class AccountsAdminController
         return redirect('admin.accounts.login');
     }
 
-    protected function isSuperAdminExists()
+    /**
+     * Determine is super admin exists
+     * 
+     * @return bool 
+     */
+    protected function isSuperAdminExists(): bool
     {
         return registry()->get('plugins.accounts-admin.settings.supper_admin_registered');
     }
