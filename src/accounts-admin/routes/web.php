@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Flextype\Middlewares\CsrfMiddleware;
 use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInMiddleware;
-use Flextype\Plugin\Acl\Middlewares\AclIsUserLoggedInRolesInMiddleware;
 use Flextype\Plugin\AccountsAdmin\Controllers\AccountsAdminController;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -22,16 +21,4 @@ app()->group('/' . $adminRoute . '/accounts', function (RouteCollectorProxy $gro
 app()->group('/' . $adminRoute . '/accounts', function (RouteCollectorProxy $group) {
     $group->post('/logout', [AccountsAdminController::class, 'logoutProcess'])->setName('admin.accounts.logoutProcess');
 })->add(new AclIsUserLoggedInMiddleware(['redirect' => 'admin.accounts.login']))
-  ->add(new CsrfMiddleware());
-  
-app()->group('/' . $adminRoute . '/accounts', function (RouteCollectorProxy $group) {
-    $group->get('', [AccountsAdminController::class, 'index'])->setName('admin.accounts.index');
-    $group->get('/add', [AccountsAdminController::class, 'add'])->setName('admin.accounts.add');
-    $group->post('/add', [AccountsAdminController::class, 'addProcess'])->setName('admin.accounts.addProcess');
-    $group->get('/edit', [AccountsAdminController::class, 'edit'])->setName('admin.accounts.edit');
-    $group->post('/edit', [AccountsAdminController::class, 'editProcess'])->setName('admin.accounts.editProcess');
-    $group->post('/delete', [AccountsAdminController::class, 'deleteProcess'])->setName('admin.accounts.deleteProcess');
-})->add(new AclIsUserLoggedInMiddleware(['redirect' => 'admin.accounts.login']))
-  ->add(new AclIsUserLoggedInRolesInMiddleware(['redirect' => (acl()->isUserLoggedIn() ? 'admin.accounts.no-access' : 'admin.accounts.login'),
-                                                'roles' => 'admin']))
   ->add(new CsrfMiddleware());
